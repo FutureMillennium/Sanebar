@@ -1,0 +1,7 @@
+*.suo
+/bin/*.pdb
+/bin/SaneBar.vshost.exe
+/bin/SaneBar.vshost.exe.config
+/bin/SaneBar.vshost.exe.manifest
+/SaneBar/bin/Debug
+/SaneBar/obj
