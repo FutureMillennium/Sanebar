@@ -23,9 +23,13 @@ namespace Sanebar
 	{
 		SanebarWindow[] sanebarWindows;
 		WindowInteropHelper this32;
-		IntPtr hwndActiveWindow;
+
+		// active window
+		static IntPtr hwndActiveWindow;
 		private string titleActiveWindow;
-		WinAPI.WinEventDelegate winEventDelegate;
+		ImageSource iconActiveWindow;
+
+		WinAPI.WinEventDelegate winEventDelegate; // Delegate needs to be declared here to avoid being garbage collected
 
 		public SanebarWindow() : this(true)
 		{
@@ -131,15 +135,37 @@ namespace Sanebar
 				titleActiveWindow = "(no title)";
 			}
 
+			iconActiveWindow = WinAPI.ToImageSource(WinAPI.GetAppIcon(hwndActiveWindow));
+
 			foreach (SanebarWindow sanebarWindow in sanebarWindows)
 			{
 				sanebarWindow.ChangeTitle(titleActiveWindow);
+				sanebarWindow.ChangeIcon(iconActiveWindow);
 			}
 		}
 
 		internal void ChangeTitle(string title)
 		{
-			currentTitleLabel.Content = title;
+			titleActiveWindowLabel.Content = title;
+		}
+
+		internal void ChangeIcon(ImageSource icon)
+		{
+			if (icon == null)
+			{
+				iconActiveWindowImage.Visibility = System.Windows.Visibility.Hidden;
+			}
+			else
+			{
+				iconActiveWindowImage.Source = icon;
+				iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
+			}
+			
+		}
+
+		private void closeButton_Click(object sender, RoutedEventArgs e)
+		{
+			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_CLOSE, 0);
 		}
 	}
 }
