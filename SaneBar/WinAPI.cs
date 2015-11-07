@@ -34,8 +34,7 @@ namespace Sanebar
 
 		[DllImport("user32.dll")]
 		public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
-
-
+		
 
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
 		public static extern int GetWindowTextLength(IntPtr hWnd);
@@ -63,6 +62,10 @@ namespace Sanebar
 
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]
 		public static extern IntPtr SendMessage(IntPtr hwnd, int wMsg, int wParam, int lParam);
+
+		[DllImport("user32.dll")]
+		public static extern bool IsZoomed(IntPtr hWnd);
+
 
 		public const int GCL_HICONSM = -34;
 		public const int GCL_HICON = -14;
@@ -116,5 +119,20 @@ namespace Sanebar
 
 			return imageSource;
 		}
+
+
+		public struct DWMCOLORIZATIONPARAMS
+		{
+			public UInt32 ColorizationColor;
+			public UInt32 ColorizationAfterglow;
+			public UInt32 ColorizationColorBalance;
+			public UInt32 ColorizationAfterglowBalance;
+			public UInt32 ColorizationBlurBalance;
+			public UInt32 ColorizationGlassReflectionIntensity;
+			public UInt32 ColorizationOpaqueBlend;
+		}
+
+		[DllImport("dwmapi.dll", EntryPoint = "#127")]
+		public static extern void DwmGetColorizationParameters(ref DWMCOLORIZATIONPARAMS dp);
 	}
 }

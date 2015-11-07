@@ -25,12 +25,17 @@ namespace Sanebar
 
 		internal WindowInteropHelper this32;
 		internal System.Windows.Forms.Screen screenThis;
+		bool isPrimary = false;
+
+		static Brush defaultBackground;
+		static Brush activeBackground;
 
 		// active window
 		static IntPtr hwndActiveWindow;
 		static string titleActiveWindow;
 		static ImageSource iconActiveWindow;
 		static System.Windows.Forms.Screen screenActiveWindow;
+		static bool isMaximisedActiveWindow;
 
 		WinAPI.WinEventDelegate winEventDelegate; // Delegate needs to be declared here to avoid being garbage collected
 
@@ -44,6 +49,14 @@ namespace Sanebar
 			// Primary Sanebar window handles other Sanebar windows
 			if (primary)
 			{
+				isPrimary = true;
+
+				WinAPI.DWMCOLORIZATIONPARAMS dwmColors = new WinAPI.DWMCOLORIZATIONPARAMS();
+				WinAPI.DwmGetColorizationParameters(ref dwmColors);
+				System.Drawing.Color clr = System.Drawing.Color.FromArgb((int)dwmColors.ColorizationColor);
+				Color clrAero = Color.FromArgb(clr.A, clr.R, clr.G, clr.B);
+				activeBackground = new SolidColorBrush(clrAero);
+
 				// Create a Sanebar window for each monitor
 				sanebarWindows = new SanebarWindow[System.Windows.Forms.Screen.AllScreens.Length];
 				sanebarWindows[0] = this;
@@ -95,6 +108,9 @@ namespace Sanebar
 			// can’t get focus (WS_EX_NOACTIVATE)
 			int exStyle = WinAPI.GetWindowLong(this32.Handle, WinAPI.GWL_EXSTYLE);
 			WinAPI.SetWindowLong(this32.Handle, WinAPI.GWL_EXSTYLE, exStyle | WinAPI.WS_EX_NOACTIVATE);
+
+			if (isPrimary)
+				defaultBackground = this.Background;
 		}
 
 		// Windows event
@@ -150,6 +166,7 @@ namespace Sanebar
 			if (updateFocus)
 			{
 				screenActiveWindow = System.Windows.Forms.Screen.FromHandle(hwndActiveWindow);
+				isMaximisedActiveWindow = WinAPI.IsZoomed(hwndActiveWindow);
 			}
 
 			if (updateTitle)
@@ -206,13 +223,19 @@ namespace Sanebar
 
 		internal void ChangeFocus()
 		{
-			if (screenActiveWindow.DeviceName != screenThis.DeviceName)
+			if (screenActiveWindow.DeviceName == screenThis.DeviceName)
 			{
-				this.Opacity = 0.5;
+				if (isMaximisedActiveWindow)
+					this.Background = activeBackground;
+				else
+					this.Background = defaultBackground;
+
+				this.Opacity = 1;
 			}
 			else
 			{
-				this.Opacity = 1;
+				this.Background = defaultBackground;
+				this.Opacity = 0.5;
 			}
 		}
 
