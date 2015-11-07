@@ -22,12 +22,15 @@ namespace Sanebar
 	public partial class SanebarWindow : Window
 	{
 		SanebarWindow[] sanebarWindows;
-		WindowInteropHelper this32;
+
+		internal WindowInteropHelper this32;
+		internal System.Windows.Forms.Screen screenThis;
 
 		// active window
 		static IntPtr hwndActiveWindow;
-		private string titleActiveWindow;
-		ImageSource iconActiveWindow;
+		static string titleActiveWindow;
+		static ImageSource iconActiveWindow;
+		static System.Windows.Forms.Screen screenActiveWindow;
 
 		WinAPI.WinEventDelegate winEventDelegate; // Delegate needs to be declared here to avoid being garbage collected
 
@@ -54,6 +57,7 @@ namespace Sanebar
 						this.Top = screen.WorkingArea.Top;
 						this.Left = screen.WorkingArea.Left;
 						this.Width = screen.WorkingArea.Right - screen.WorkingArea.Left;
+						screenThis = screen;
 					}
 					else
 					{
@@ -62,6 +66,7 @@ namespace Sanebar
 						sanebarWindows[i].Top = screen.WorkingArea.Top;
 						sanebarWindows[i].Left = screen.WorkingArea.Left;
 						sanebarWindows[i].Width = screen.WorkingArea.Right - screen.WorkingArea.Left;
+						sanebarWindows[i].screenThis = screen;
 						sanebarWindows[i].Show();
 						i++;
 					}
@@ -100,11 +105,21 @@ namespace Sanebar
 				// Active window changed
 				case WinAPI.EVENT_SYSTEM_FOREGROUND:
 					{
-						if (hwnd != this32.Handle)
+						bool isOwn = false;
+
+						foreach (SanebarWindow sanebarWindow in sanebarWindows)
+						{
+							if (hwnd == sanebarWindow.this32.Handle)
+							{
+								isOwn = true;
+								break;
+							}
+						}
+
+						if (isOwn == false)
 						{
 							hwndActiveWindow = hwnd;
-							ChangeTitle();
-							
+							Update();
 						}
 					}
 					break;
@@ -113,54 +128,92 @@ namespace Sanebar
 					{
 						if (hwnd == hwndActiveWindow)
 						{
-							ChangeTitle();
+							Update(true, false, false);
 						}
 					}
 					break;
 				// Window location/size change
 				case WinAPI.EVENT_OBJECT_LOCATIONCHANGE:
-				{
-					
-				}
+					{
+						if (hwnd == hwndActiveWindow)
+						{
+							Update(false, false, true);
+						}
+					}
 					break;
 			}
 		}
 
 		// Change displayed active window title
-		private void ChangeTitle()
+		private void Update(bool updateTitle = true, bool updateIcon = true, bool updateFocus = true)
 		{
-			titleActiveWindow = WinAPI.GetWindowTitle(hwndActiveWindow);
-			if (string.IsNullOrWhiteSpace(titleActiveWindow))
+			if (updateFocus)
 			{
-				titleActiveWindow = "(no title)";
+				screenActiveWindow = System.Windows.Forms.Screen.FromHandle(hwndActiveWindow);
 			}
 
-			iconActiveWindow = WinAPI.ToImageSource(WinAPI.GetAppIcon(hwndActiveWindow));
+			if (updateTitle)
+			{
+				titleActiveWindow = WinAPI.GetWindowTitle(hwndActiveWindow);
+				if (string.IsNullOrWhiteSpace(titleActiveWindow))
+				{
+					titleActiveWindow = "(no title)";
+				}
+			}
+
+			if (updateIcon)
+			{
+				System.Drawing.Icon icon = WinAPI.GetAppIcon(hwndActiveWindow);
+				if (icon != null)
+				{
+					iconActiveWindow = WinAPI.ToImageSource(icon);
+				}
+				else
+				{
+					iconActiveWindow = null;
+				}
+			}
 
 			foreach (SanebarWindow sanebarWindow in sanebarWindows)
 			{
-				sanebarWindow.ChangeTitle(titleActiveWindow);
-				sanebarWindow.ChangeIcon(iconActiveWindow);
+				if (updateTitle)
+					sanebarWindow.ChangeTitle();
+				if (updateIcon)
+					sanebarWindow.ChangeIcon();
+				if (updateFocus)
+					sanebarWindow.ChangeFocus();
 			}
 		}
 
-		internal void ChangeTitle(string title)
+		internal void ChangeTitle()
 		{
-			titleActiveWindowLabel.Content = title;
+			titleActiveWindowLabel.Content = titleActiveWindow;
 		}
 
-		internal void ChangeIcon(ImageSource icon)
+		internal void ChangeIcon()
 		{
-			if (icon == null)
+			if (iconActiveWindow == null)
 			{
 				iconActiveWindowImage.Visibility = System.Windows.Visibility.Hidden;
 			}
 			else
 			{
-				iconActiveWindowImage.Source = icon;
+				iconActiveWindowImage.Source = iconActiveWindow;
 				iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
 			}
 			
+		}
+
+		internal void ChangeFocus()
+		{
+			if (screenActiveWindow.DeviceName != screenThis.DeviceName)
+			{
+				this.Opacity = 0.5;
+			}
+			else
+			{
+				this.Opacity = 1;
+			}
 		}
 
 		private void closeButton_Click(object sender, RoutedEventArgs e)
