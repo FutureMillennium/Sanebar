@@ -134,5 +134,24 @@ namespace Sanebar
 
 		[DllImport("dwmapi.dll", EntryPoint = "#127")]
 		public static extern void DwmGetColorizationParameters(ref DWMCOLORIZATIONPARAMS dp);
+
+
+		[StructLayout(LayoutKind.Explicit)]
+		public struct WORD
+		{
+			[FieldOffset(0)]
+			public int LongValue;
+			[FieldOffset(0)]
+			public short LoWord;
+			[FieldOffset(2)]
+			public short HiWord;
+
+			public WORD(int Lo, int Hi)
+			{
+			  LongValue = Lo;
+			  LoWord = (short)Lo;
+			  HiWord = (short)Hi;
+			}
+		}
 	}
 }

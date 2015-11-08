@@ -25,7 +25,8 @@ namespace Sanebar
 
 		internal WindowInteropHelper this32;
 		internal System.Windows.Forms.Screen screenThis;
-		bool isPrimary = false;
+		//bool isPrimary = false;
+		bool isDoubleClick = false;
 
 		static Brush defaultBackground;
 		static Brush activeBackground;
@@ -49,13 +50,14 @@ namespace Sanebar
 			// Primary Sanebar window handles other Sanebar windows
 			if (primary)
 			{
-				isPrimary = true;
+				//isPrimary = true;
 
 				WinAPI.DWMCOLORIZATIONPARAMS dwmColors = new WinAPI.DWMCOLORIZATIONPARAMS();
 				WinAPI.DwmGetColorizationParameters(ref dwmColors);
 				System.Drawing.Color clr = System.Drawing.Color.FromArgb((int)dwmColors.ColorizationColor);
 				Color clrAero = Color.FromArgb(clr.A, clr.R, clr.G, clr.B);
 				activeBackground = new SolidColorBrush(clrAero);
+				defaultBackground = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0));
 
 				// Create a Sanebar window for each monitor
 				sanebarWindows = new SanebarWindow[System.Windows.Forms.Screen.AllScreens.Length];
@@ -108,9 +110,6 @@ namespace Sanebar
 			// can’t get focus (WS_EX_NOACTIVATE)
 			int exStyle = WinAPI.GetWindowLong(this32.Handle, WinAPI.GWL_EXSTYLE);
 			WinAPI.SetWindowLong(this32.Handle, WinAPI.GWL_EXSTYLE, exStyle | WinAPI.WS_EX_NOACTIVATE);
-
-			if (isPrimary)
-				defaultBackground = this.Background;
 		}
 
 		// Windows event
@@ -235,13 +234,73 @@ namespace Sanebar
 			else
 			{
 				this.Background = defaultBackground;
-				this.Opacity = 0.5;
+				this.Opacity = 0.75;
 			}
 		}
 
 		private void closeButton_Click(object sender, RoutedEventArgs e)
 		{
+			CloseActiveWindow();
+		}
+
+		private void CloseActiveWindow()
+		{
 			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_CLOSE, 0);
+		}
+
+		private void titleActiveWindowLabel_MouseUp(object sender, MouseButtonEventArgs e)
+		{
+			if (e.ChangedButton == MouseButton.Right)
+			{
+				ShowSystemMenu(e.GetPosition(this));
+				e.Handled = true;
+			}
+		}
+
+		private void iconActiveWindowImage_MouseUp(object sender, MouseButtonEventArgs e)
+		{
+			if (isDoubleClick)
+			{
+				isDoubleClick = false;
+			}
+			else if (e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right)
+			{
+				ShowSystemMenu(new Point(0, this.ActualHeight));
+				e.Handled = true;
+			}
+		}
+
+		private void ShowSystemMenu(Point pos)
+		{
+			WinAPI.WORD word = new WinAPI.WORD((short)(pos.X + screenThis.Bounds.Left), (short)(pos.Y + screenThis.Bounds.Top));
+			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_GETSYSMENU, 0, word.LongValue);
+		}
+
+		private void ContentControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+		{
+			isDoubleClick = true;
+			CloseActiveWindow();
+			e.Handled = true;
+		}
+
+		private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+		{
+			ToggleMaximiseActiveWindow();
+			e.Handled = true;
+		}
+
+		private void ToggleMaximiseActiveWindow()
+		{
+			if (isMaximisedActiveWindow)
+			{
+				WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_RESTORE, 0);
+				//return false;
+			}
+			else
+			{
+				WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_MAXIMIZE, 0);
+				//return true;
+			}
 		}
 	}
 }
