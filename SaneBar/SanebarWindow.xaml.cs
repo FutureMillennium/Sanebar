@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Sanebar
 {
@@ -27,9 +29,12 @@ namespace Sanebar
 		internal System.Windows.Forms.Screen screenThis;
 		//bool isPrimary = false;
 		bool isDoubleClick = false;
+		internal static DispatcherTimer hideQuickLaunchTimer;
 
 		static Brush defaultBackground;
 		static Brush activeBackground;
+
+		static QuickLaunch quickLaunch;
 
 		// active window
 		static IntPtr hwndActiveWindow;
@@ -51,6 +56,7 @@ namespace Sanebar
 			if (primary)
 			{
 				//isPrimary = true;
+				quickLaunch = new QuickLaunch();
 
 				WinAPI.DWMCOLORIZATIONPARAMS dwmColors = new WinAPI.DWMCOLORIZATIONPARAMS();
 				WinAPI.DwmGetColorizationParameters(ref dwmColors);
@@ -98,8 +104,12 @@ namespace Sanebar
 
 		private void Window_MouseUp(object sender, MouseButtonEventArgs e)
 		{
+			if (e.ChangedButton == MouseButton.Middle)
+			{
+				quickLaunch.Hide();
+			}
 			// TEMP
-			if (e.ChangedButton == MouseButton.Right)
+			else if (e.ChangedButton == MouseButton.Right)
 				Application.Current.Shutdown();
 		}
 
@@ -265,7 +275,7 @@ namespace Sanebar
 			}
 			else if (e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right)
 			{
-				ShowSystemMenu(new Point(0, this.ActualHeight));
+				ShowSystemMenu(new Point(0, this.Height));
 				e.Handled = true;
 			}
 		}
@@ -300,6 +310,75 @@ namespace Sanebar
 			{
 				WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_MAXIMIZE, 0);
 				//return true;
+			}
+		}
+
+		private void Window_Drop(object sender, DragEventArgs e)
+		{
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			{
+				/*string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+				if (files.Length > 0)
+				{
+					OpenFile(files[0]);
+				}*/
+			}
+		}
+
+		private void Window_DragLeave(object sender, DragEventArgs e)
+		{
+			if (quickLaunch.IsVisible)
+			{
+				if (hideQuickLaunchTimer == null)
+				{
+					hideQuickLaunchTimer = new DispatcherTimer();
+					hideQuickLaunchTimer.Interval = new TimeSpan(0, 0, 0, 0, 200);
+					hideQuickLaunchTimer.Tick += hideQuickLaunchTimer_Tick;
+				}
+
+				hideQuickLaunchTimer.Start();
+			}
+		}
+
+		void hideQuickLaunchTimer_Tick(object sender, EventArgs e)
+		{
+			if (quickLaunch.IsVisible)
+			{
+				quickLaunch.Hide();
+			}
+			hideQuickLaunchTimer.Stop();
+		}
+
+		private void Window_DragEnter(object sender, DragEventArgs e)
+		{
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			{
+				if (hideQuickLaunchTimer != null)
+					hideQuickLaunchTimer.Stop();
+				if (quickLaunch.IsVisible == false)
+				{
+					ShowQuickLaunch(e.GetPosition(this));
+				}
+			}
+		}
+
+		private void ShowQuickLaunch(Point pos)
+		{
+			quickLaunch.Left = this.Left + pos.X - (quickLaunch.Width / 2);
+			if (quickLaunch.Left < this.Left)
+				quickLaunch.Left = this.Left;
+			else if (quickLaunch.Left + quickLaunch.Width > this.Left + this.Width)
+				quickLaunch.Left = this.Left + this.Width - quickLaunch.Width;
+			quickLaunch.Top = this.Top + this.Height;
+			quickLaunch.Show();
+		}
+
+		private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+		{
+			if (e.ChangedButton == MouseButton.Middle)
+			{
+				ShowQuickLaunch(e.GetPosition(this));
+				quickLaunch.CaptureMouse();
 			}
 		}
 	}
