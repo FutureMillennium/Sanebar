@@ -13,12 +13,12 @@
     </Window.Triggers>
     <Grid>
         <Border BorderBrush="#3F000000" BorderThickness="0,0,0,1" />
-        <ContentControl HorizontalAlignment="Left" VerticalContentAlignment="Center" MouseUp="iconActiveWindowImage_MouseUp" MouseDoubleClick="ContentControl_MouseDoubleClick">
-            <Image x:Name="iconActiveWindowImage" Width="16" HorizontalAlignment="Left" Height="16" Margin="2,0,0,0" SnapsToDevicePixels="True" VerticalAlignment="Center"/>
+        <ContentControl HorizontalAlignment="Left" VerticalContentAlignment="Center" MouseUp="iconActiveWindowImage_MouseUp" MouseDoubleClick="ContentControl_MouseDoubleClick" Background="#00000000">
+            <Image x:Name="iconActiveWindowImage" Width="16" HorizontalAlignment="Left" Height="16" Margin="2,0,0,0" VerticalAlignment="Center" UseLayoutRounding="True"/>
         </ContentControl>
         <Label x:Name="titleActiveWindowLabel" Content="Sanebar" Foreground="White" Padding="0" VerticalContentAlignment="Center" Margin="23,0,0,0" FontSize="14" HorizontalAlignment="Left" MouseUp="titleActiveWindowLabel_MouseUp" />
-        <Button x:Name="closeButton" Width="50" HorizontalAlignment="Right" Click="closeButton_Click">
-            <Path Width="10" Height="10" Stretch="Uniform" Fill="Black" Data="F1 M 4.70432,0L 0.0480347,4.77802L 7.00842,11.6812L 0,18.7292L 4.70432,23.46L 11.6647,16.412L 18.6252,23.46L 23.3774,18.7774L 16.369,11.6812L 23.3294,4.77802L 18.6252,0L 11.6647,6.9986L 4.70432,0 Z "/>
+        <Button x:Name="closeButton" Width="50" HorizontalAlignment="Right" Click="closeButton_Click" Style="{DynamicResource SBButtonStyle}">
+            <Path Width="10" Height="10" Stretch="Uniform" Fill="White" Data="F1 M 4.70432,0L 0.0480347,4.77802L 7.00842,11.6812L 0,18.7292L 4.70432,23.46L 11.6647,16.412L 18.6252,23.46L 23.3774,18.7774L 16.369,11.6812L 23.3294,4.77802L 18.6252,0L 11.6647,6.9986L 4.70432,0 Z "/>
         </Button>
     </Grid>
 </Window>

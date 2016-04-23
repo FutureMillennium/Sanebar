@@ -20,10 +20,31 @@ namespace Sanebar
 	/// </summary>
 	public partial class QuickLaunch : Window
 	{
+        Grid iconGrid;
+
 		public QuickLaunch()
 		{
 			InitializeComponent();
-		}
+
+            iconGrid = new Grid
+            {
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition(),
+                    new ColumnDefinition(),
+                    new ColumnDefinition(),
+                },
+                RowDefinitions =
+                {
+                    new RowDefinition(),
+                    new RowDefinition(),
+                    new RowDefinition(),
+                },
+            };
+
+            grid.Children.Add(iconGrid);
+            
+        }
 
 		private void Window_DragOver(object sender, DragEventArgs e)
 		{

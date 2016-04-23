@@ -94,8 +94,10 @@ namespace Sanebar
 				}
 
 				winEventDelegate = new WinAPI.WinEventDelegate(WinEventProc);
-				IntPtr m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT);
-				m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_OBJECT_LOCATIONCHANGE, WinAPI.EVENT_OBJECT_NAMECHANGE, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT);
+                // EVENT_SYSTEM_FOREGROUND
+                IntPtr m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT);
+                // EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE
+                m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_OBJECT_LOCATIONCHANGE, WinAPI.EVENT_OBJECT_NAMECHANGE, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT);
 			}
 			this.Height = System.Windows.Forms.SystemInformation.CaptionHeight;
 
@@ -104,13 +106,15 @@ namespace Sanebar
 
 		private void Window_MouseUp(object sender, MouseButtonEventArgs e)
 		{
-			if (e.ChangedButton == MouseButton.Middle)
-			{
-				quickLaunch.Hide();
-			}
-			// TEMP
-			else if (e.ChangedButton == MouseButton.Right)
-				Application.Current.Shutdown();
+            if (e.ChangedButton == MouseButton.Middle)
+            {
+                quickLaunch.Hide();
+            }
+            else if (e.ChangedButton == MouseButton.Right)
+            {
+                // TODO menu
+                Application.Current.Shutdown();
+            }
 		}
 
 		private void Window_SourceInitialized(object sender, EventArgs e)
@@ -181,10 +185,6 @@ namespace Sanebar
 			if (updateTitle)
 			{
 				titleActiveWindow = WinAPI.GetWindowTitle(hwndActiveWindow);
-				if (string.IsNullOrWhiteSpace(titleActiveWindow))
-				{
-					titleActiveWindow = "(no title)";
-				}
 			}
 
 			if (updateIcon)
