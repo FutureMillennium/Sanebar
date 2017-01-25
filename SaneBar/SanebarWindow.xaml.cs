@@ -61,7 +61,8 @@ namespace Sanebar
 				WinAPI.DWMCOLORIZATIONPARAMS dwmColors = new WinAPI.DWMCOLORIZATIONPARAMS();
 				WinAPI.DwmGetColorizationParameters(ref dwmColors);
 				System.Drawing.Color clr = System.Drawing.Color.FromArgb((int)dwmColors.ColorizationColor);
-				Color clrAero = Color.FromArgb(clr.A, clr.R, clr.G, clr.B);
+				//Color clrAero = Color.FromArgb(clr.A, clr.R, clr.G, clr.B);
+				Color clrAero = Color.FromArgb(255, clr.R, clr.G, clr.B);
 				activeBackground = new SolidColorBrush(clrAero);
 				defaultBackground = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0));
 

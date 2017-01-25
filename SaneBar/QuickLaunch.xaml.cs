@@ -69,5 +69,10 @@ namespace Sanebar
 		{
 			this.Hide();
 		}
+
+		private void Window_Drop(object sender, DragEventArgs e)
+		{
+			this.Hide();
+		}
 	}
 }

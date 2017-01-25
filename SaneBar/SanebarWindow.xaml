@@ -12,7 +12,6 @@
         </EventTrigger>
     </Window.Triggers>
     <Grid>
-        <Border BorderBrush="#3F000000" BorderThickness="0,0,0,1" />
         <ContentControl HorizontalAlignment="Left" VerticalContentAlignment="Center" MouseUp="iconActiveWindowImage_MouseUp" MouseDoubleClick="ContentControl_MouseDoubleClick" Background="#00000000">
             <Image x:Name="iconActiveWindowImage" Width="16" HorizontalAlignment="Left" Height="16" Margin="2,0,0,0" VerticalAlignment="Center" UseLayoutRounding="True"/>
         </ContentControl>
