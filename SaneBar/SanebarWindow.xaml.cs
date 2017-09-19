@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using static Sanebar.WinAPI;
 
 namespace Sanebar
 {
@@ -61,8 +63,8 @@ namespace Sanebar
 				WinAPI.DWMCOLORIZATIONPARAMS dwmColors = new WinAPI.DWMCOLORIZATIONPARAMS();
 				WinAPI.DwmGetColorizationParameters(ref dwmColors);
 				System.Drawing.Color clr = System.Drawing.Color.FromArgb((int)dwmColors.ColorizationColor);
-				//Color clrAero = Color.FromArgb(clr.A, clr.R, clr.G, clr.B);
-				Color clrAero = Color.FromArgb(255, clr.R, clr.G, clr.B);
+				Color clrAero = Color.FromArgb(clr.A, clr.R, clr.G, clr.B);
+				//Color clrAero = Color.FromArgb(255, clr.R, clr.G, clr.B);
 				activeBackground = new SolidColorBrush(clrAero);
 				defaultBackground = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0));
 
@@ -151,7 +153,7 @@ namespace Sanebar
 							hwndActiveWindow = hwnd;
 							Update();
 						}
-					}
+                    }
 					break;
 				// Window name change
 				case WinAPI.EVENT_OBJECT_NAMECHANGE:
@@ -181,6 +183,10 @@ namespace Sanebar
 			{
 				screenActiveWindow = System.Windows.Forms.Screen.FromHandle(hwndActiveWindow);
 				isMaximisedActiveWindow = WinAPI.IsZoomed(hwndActiveWindow);
+				if (isMaximisedActiveWindow)
+					maxButton.Content = "\xE923";
+				else
+					maxButton.Content = "\xE922";
 			}
 
 			if (updateTitle)
@@ -359,6 +365,7 @@ namespace Sanebar
 				if (quickLaunch.IsVisible == false)
 				{
 					ShowQuickLaunch(e.GetPosition(this));
+					quickLaunch.CaptureMouse();
 				}
 			}
 		}
@@ -381,6 +388,21 @@ namespace Sanebar
 				ShowQuickLaunch(e.GetPosition(this));
 				quickLaunch.CaptureMouse();
 			}
+		}
+
+		private void Window_Loaded(object sender, RoutedEventArgs e)
+		{
+			BlurBehind(this);
+		}
+
+		private void minButton_Click(object sender, RoutedEventArgs e)
+		{
+			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_MINIMIZE, 0);
+		}
+
+		private void maxButton_Click(object sender, RoutedEventArgs e)
+		{
+			ToggleMaximiseActiveWindow();
 		}
 	}
 }
