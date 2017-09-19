@@ -25,6 +25,8 @@ namespace Sanebar
 	/// </summary>
 	public partial class SanebarWindow : Window
 	{
+		internal const string APP_TITLE = "Sanebar";
+
 		SanebarWindow[] sanebarWindows;
 
 		internal WindowInteropHelper this32;
@@ -179,14 +181,10 @@ namespace Sanebar
 		// Change displayed active window title
 		private void Update(bool updateTitle = true, bool updateIcon = true, bool updateFocus = true)
 		{
-			if (updateFocus)
+			if (updateFocus) // screenActiveWindow == null || 
 			{
 				screenActiveWindow = System.Windows.Forms.Screen.FromHandle(hwndActiveWindow);
 				isMaximisedActiveWindow = WinAPI.IsZoomed(hwndActiveWindow);
-				if (isMaximisedActiveWindow)
-					maxButton.Content = "\xE923";
-				else
-					maxButton.Content = "\xE922";
 			}
 
 			if (updateTitle)
@@ -234,13 +232,21 @@ namespace Sanebar
 				iconActiveWindowImage.Source = iconActiveWindow;
 				iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
 			}
-			
 		}
 
 		internal void ChangeFocus()
 		{
+			if (isMaximisedActiveWindow)
+				maxButton.Content = "\xE923";
+			else
+				maxButton.Content = "\xE922";
+
 			if (screenActiveWindow.DeviceName == screenThis.DeviceName)
 			{
+				// @TODO fullscreen check:
+				// get active window bounds and check against screen
+				//if (.Bounds.Equals(screenThis))
+
 				if (isMaximisedActiveWindow)
 					this.Background = activeBackground;
 				else
@@ -358,7 +364,8 @@ namespace Sanebar
 
 		private void Window_DragEnter(object sender, DragEventArgs e)
 		{
-			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			var a = e.Data.GetFormats();
+			if (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.UnicodeText)) // @TODO "UniformResourceLocator"?
 			{
 				if (hideQuickLaunchTimer != null)
 					hideQuickLaunchTimer.Stop();

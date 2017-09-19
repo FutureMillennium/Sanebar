@@ -15,7 +15,7 @@
         <ContentControl HorizontalAlignment="Left" VerticalContentAlignment="Center" MouseUp="iconActiveWindowImage_MouseUp" MouseDoubleClick="ContentControl_MouseDoubleClick">
             <Image x:Name="iconActiveWindowImage" Width="16" HorizontalAlignment="Left" Height="16" Margin="2,0,0,0" VerticalAlignment="Center" UseLayoutRounding="True"/>
         </ContentControl>
-        <Label x:Name="titleActiveWindowLabel" Content="Sanebar" Foreground="White" Padding="0" VerticalContentAlignment="Center" Margin="23,0,0,0" FontSize="14" HorizontalAlignment="Left" MouseUp="titleActiveWindowLabel_MouseUp" />
+        <Label x:Name="titleActiveWindowLabel" Content="Sanebar" Foreground="White" Padding="0" VerticalContentAlignment="Center" Margin="23,0,0,0" FontSize="12" HorizontalAlignment="Left" MouseUp="titleActiveWindowLabel_MouseUp" />
 		<StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
 			<Button x:Name="minButton" Width="50" Click="minButton_Click" Style="{DynamicResource SBButtonStyle}" FontFamily="Segoe MDL2 Assets" Foreground="#7FFFFFFF" FontSize="10">
 				&#xE921;

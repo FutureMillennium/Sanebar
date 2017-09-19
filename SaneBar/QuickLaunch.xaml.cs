@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -78,9 +79,12 @@ namespace Sanebar
 
 		private void Window_DragOver(object sender, DragEventArgs e)
 		{
-			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			//if (e.Data.GetDataPresent(DataFormats.FileDrop))
 			{
-				e.Effects = DragDropEffects.Link;
+				if (e.AllowedEffects == DragDropEffects.Link)
+					e.Effects = DragDropEffects.Link;
+				else
+					e.Effects = DragDropEffects.Copy;
 				e.Handled = true;
 			}
 
@@ -105,7 +109,16 @@ namespace Sanebar
 			{
 				if (lastX != -1 && lastY != -1 && actions[lastX, lastY] != null)
 				{
-					Process.Start(actions[lastX, lastY]);
+					try
+					{
+						Process.Start(actions[lastX, lastY]);
+					}
+					catch (Exception ex)
+					{
+						new Thread(() => {
+							MessageBox.Show(ex.Message, "Error – " + SanebarWindow.APP_TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
+						}).Start();
+					}
 				}
 			}
 
@@ -114,8 +127,15 @@ namespace Sanebar
 
 		private void Window_Drop(object sender, DragEventArgs e)
 		{
-			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-			if (files.Length > 0)
+			string[] files = null;
+
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+				files = (string[])e.Data.GetData(DataFormats.FileDrop);
+			else if (e.Data.GetDataPresent(DataFormats.UnicodeText))
+				files = new string[1] { (string)e.Data.GetData(DataFormats.UnicodeText) };
+			// else // @TODO error?
+
+			if (files != null && files.Length > 0)
 			{
 				if (lastX != -1 && lastY != -1)
 				{
@@ -166,8 +186,8 @@ namespace Sanebar
 		private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
 		{
 			Properties.Settings.Default.QuickLaunch = new System.Collections.Specialized.StringCollection();
-			for (int i = 0; i < actions.GetLength(0); i++)
-				for (int j = 0; j < actions.GetLength(1); j++)
+			for (int j = 0; j < actions.GetLength(1); j++)
+				for (int i = 0; i < actions.GetLength(0); i++)
 					Properties.Settings.Default.QuickLaunch.Add(actions[i, j]);
 
 			Properties.Settings.Default.Save();
