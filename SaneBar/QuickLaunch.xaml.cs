@@ -23,6 +23,7 @@ namespace Sanebar
 	public partial class QuickLaunch : Window
 	{
 		internal WindowInteropHelper this32;
+		internal System.Drawing.Point? prevCursorPosition = null;
 
 		Grid iconGrid;
         Button[,] buttons;
@@ -106,6 +107,18 @@ namespace Sanebar
 			//ButtonHoverOnMouseMove(new Point(-1, -1));
 		}
 
+		void Done()
+		{
+			if (prevCursorPosition != null)
+			{
+				System.Windows.Forms.Cursor.Clip = new System.Drawing.Rectangle();
+				System.Windows.Forms.Cursor.Position = (System.Drawing.Point)prevCursorPosition;
+
+				prevCursorPosition = null;
+			}
+			this.Hide();
+		}
+
 		private void Window_MouseUp(object sender, MouseButtonEventArgs e)
 		{
 			if (e.ChangedButton != MouseButton.Right)
@@ -125,7 +138,7 @@ namespace Sanebar
 				}
 			}
 
-			this.Hide();
+			Done();
 		}
 
 		private void Window_Drop(object sender, DragEventArgs e)
@@ -147,7 +160,7 @@ namespace Sanebar
 				}
 			}
 
-			this.Hide();
+			Done();
 		}
 
 		void ButtonHoverOnMouseMove(Point pos)

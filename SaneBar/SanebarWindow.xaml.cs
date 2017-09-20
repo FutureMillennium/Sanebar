@@ -473,7 +473,14 @@ namespace Sanebar
 		{
 			if (e.ChangedButton == MouseButton.Middle)
 			{
+				var pos = e.GetPosition(this);
+
+				quickLaunch.prevCursorPosition = new System.Drawing.Point((int)(this.Left + pos.X), (int)(this.Top + pos.Y));
+
 				ShowQuickLaunch(e.GetPosition(this));
+
+				System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)(quickLaunch.Left + quickLaunch.Width / 2), (int)(quickLaunch.Top + quickLaunch.Height / 2));
+				System.Windows.Forms.Cursor.Clip = new System.Drawing.Rectangle((int)quickLaunch.Left, (int)quickLaunch.Top, (int)quickLaunch.Width, (int)quickLaunch.Height);
 				quickLaunch.CaptureMouse();
 			}
 		}
