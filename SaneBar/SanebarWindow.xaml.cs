@@ -31,7 +31,8 @@ namespace Sanebar
 
 		internal WindowInteropHelper this32;
 		internal System.Windows.Forms.Screen screenThis;
-		//bool isPrimary = false;
+		internal bool isCollapsed = false;
+		bool isPrimary = false;
 		bool isDoubleClick = false;
 		internal static DispatcherTimer hideQuickLaunchTimer;
 
@@ -39,6 +40,10 @@ namespace Sanebar
 		static Brush activeBackground;
 
 		static QuickLaunch quickLaunch;
+		static MenuWindow menuWindow;
+		internal static SanebarWindow primarySanebarWindow;
+
+		static System.Collections.Specialized.StringCollection exceptionList;
 
 		// active window
 		static IntPtr hwndActiveWindow;
@@ -46,6 +51,8 @@ namespace Sanebar
 		static ImageSource iconActiveWindow;
 		static System.Windows.Forms.Screen screenActiveWindow;
 		static bool isMaximisedActiveWindow;
+		static RECT rectActiveWindow;
+		static Process processActive;
 
 		WinAPI.WinEventDelegate winEventDelegate; // Delegate needs to be declared here to avoid being garbage collected
 
@@ -59,8 +66,9 @@ namespace Sanebar
 			// Primary Sanebar window handles other Sanebar windows
 			if (primary)
 			{
-				//isPrimary = true;
+				isPrimary = true;
 				quickLaunch = new QuickLaunch();
+				primarySanebarWindow = this;
 
 				WinAPI.DWMCOLORIZATIONPARAMS dwmColors = new WinAPI.DWMCOLORIZATIONPARAMS();
 				WinAPI.DwmGetColorizationParameters(ref dwmColors);
@@ -106,6 +114,10 @@ namespace Sanebar
 			}
 			this.Height = System.Windows.Forms.SystemInformation.CaptionHeight;
 
+			exceptionList = Properties.Settings.Default.ExceptionList;
+			if (exceptionList == null)
+				exceptionList = new System.Collections.Specialized.StringCollection();
+
 			InitializeComponent();
 		}
 
@@ -117,9 +129,26 @@ namespace Sanebar
             }
             else if (e.ChangedButton == MouseButton.Right)
             {
-                // TODO menu
-                Application.Current.Shutdown();
-            }
+				if (menuWindow == null)
+					menuWindow = new MenuWindow();
+
+				var pos = e.GetPosition(this);
+
+				if (processActive != null)
+				{
+					// @TODO @Speed Don't do this again if the active window hasn't changed
+					if (exceptionList.IndexOf(processActive.ProcessName) != -1)
+						menuWindow.hideCheckbox.IsChecked = true;
+					else
+						menuWindow.hideCheckbox.IsChecked = false;
+					menuWindow.hideCheckbox.Content = "Hide on " + processActive.MainModule.FileVersionInfo.FileDescription;
+				}
+
+				menuWindow.Left = this.Left + pos.X;
+				menuWindow.Top = this.Top + pos.Y;
+				menuWindow.Show();
+				menuWindow.Activate();
+			}
 		}
 
 		private void Window_SourceInitialized(object sender, EventArgs e)
@@ -139,21 +168,30 @@ namespace Sanebar
 				// Active window changed
 				case WinAPI.EVENT_SYSTEM_FOREGROUND:
 					{
-						bool isOwn = false;
-
-						foreach (SanebarWindow sanebarWindow in sanebarWindows)
+						if (hwndActiveWindow != hwnd)
 						{
-							if (hwnd == sanebarWindow.this32.Handle)
+							bool isOwn = false;
+
+							foreach (SanebarWindow sanebarWindow in sanebarWindows)
 							{
-								isOwn = true;
-								break;
+								if (hwnd == sanebarWindow.this32.Handle)
+								{
+									isOwn = true;
+									break;
+								}
 							}
-						}
 
-						if (isOwn == false)
-						{
-							hwndActiveWindow = hwnd;
-							Update();
+							if (isOwn == false
+								&& (menuWindow == null
+									|| menuWindow.this32 == null
+									|| menuWindow.this32.Handle != hwnd)
+								&& (quickLaunch == null
+									|| quickLaunch.this32 == null
+									|| quickLaunch.this32.Handle != hwnd))
+							{
+								hwndActiveWindow = hwnd;
+								Update(true, true, true, true);
+							}
 						}
                     }
 					break;
@@ -162,16 +200,16 @@ namespace Sanebar
 					{
 						if (hwnd == hwndActiveWindow)
 						{
-							Update(true, false, false);
+							Update(true, false, false, false);
 						}
 					}
 					break;
 				// Window location/size change
 				case WinAPI.EVENT_OBJECT_LOCATIONCHANGE:
 					{
-						if (hwnd == hwndActiveWindow)
+						if (hwnd != IntPtr.Zero && hwnd == hwndActiveWindow)
 						{
-							Update(false, false, true);
+							Update(false, false, true, false);
 						}
 					}
 					break;
@@ -179,11 +217,17 @@ namespace Sanebar
 		}
 
 		// Change displayed active window title
-		private void Update(bool updateTitle = true, bool updateIcon = true, bool updateFocus = true)
+		private void Update(bool updateTitle, bool updateIcon, bool updateFocus, bool processUpdate)
 		{
+			if (processUpdate)
+			{
+				processActive = WinAPI.GetProcessName(hwndActiveWindow);
+			}
+
 			if (updateFocus) // screenActiveWindow == null || 
 			{
 				screenActiveWindow = System.Windows.Forms.Screen.FromHandle(hwndActiveWindow);
+				WinAPI.GetWindowRect(hwndActiveWindow, ref rectActiveWindow); // @TODO if false?
 				isMaximisedActiveWindow = WinAPI.IsZoomed(hwndActiveWindow);
 			}
 
@@ -230,7 +274,8 @@ namespace Sanebar
 			else
 			{
 				iconActiveWindowImage.Source = iconActiveWindow;
-				iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
+				if (isCollapsed == false)
+					iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
 			}
 		}
 
@@ -241,23 +286,54 @@ namespace Sanebar
 			else
 				maxButton.Content = "\xE922";
 
-			if (screenActiveWindow.DeviceName == screenThis.DeviceName)
+			if (screenActiveWindow.Equals(screenThis))
 			{
-				// @TODO fullscreen check:
-				// get active window bounds and check against screen
-				//if (.Bounds.Equals(screenThis))
-
-				if (isMaximisedActiveWindow)
-					this.Background = activeBackground;
+				if (rectActiveWindow.Left == screenThis.Bounds.Left
+					&& rectActiveWindow.Top == screenThis.Bounds.Top
+					&& rectActiveWindow.Right == screenThis.Bounds.Right
+					&& rectActiveWindow.Bottom == screenThis.Bounds.Bottom)
+				{
+					if (this.Visibility == Visibility.Visible)
+						this.Visibility = Visibility.Collapsed;
+				}
 				else
-					this.Background = defaultBackground;
+				{
+					if (this.Visibility == Visibility.Collapsed)
+						this.Visibility = Visibility.Visible;
 
-				this.Opacity = 1;
+					if (isMaximisedActiveWindow)
+					{
+						//if (this.Background != activeBackground)
+						this.Background = activeBackground;
+
+						if (exceptionList.IndexOf(processActive.ProcessName) != -1)
+						{
+							CollapsedChange(true);
+						}
+						else
+						{
+							CollapsedChange(false);
+						}
+					}
+					else
+					{
+						//if (this.Background != defaultBackground)
+						this.Background = defaultBackground;
+
+						CollapsedChange(false);
+					}
+
+					if (this.Opacity != 1)
+						this.Opacity = 1;
+				}
 			}
 			else
 			{
+				//if (this.Background != defaultBackground)
 				this.Background = defaultBackground;
-				this.Opacity = 0.75;
+
+				if (this.Opacity != 0.75)
+					this.Opacity = 0.75;
 			}
 		}
 
@@ -308,7 +384,8 @@ namespace Sanebar
 
 		private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 		{
-			ToggleMaximiseActiveWindow();
+			if (isDoubleClick == false)
+				ToggleMaximiseActiveWindow();
 			e.Handled = true;
 		}
 
@@ -410,6 +487,55 @@ namespace Sanebar
 		private void maxButton_Click(object sender, RoutedEventArgs e)
 		{
 			ToggleMaximiseActiveWindow();
+		}
+
+		void CollapsedChange(bool isCollapseTo)
+		{
+			if (isCollapsed != isCollapseTo)
+			{
+				isCollapsed = isCollapseTo;
+
+				if (isCollapsed)
+				{
+					this.Width = 5;
+					iconActiveWindowImage.Visibility = Visibility.Hidden;
+					closeButton.Visibility = Visibility.Hidden;
+				}
+				else
+				{
+					iconActiveWindowImage.Visibility = Visibility.Visible;
+					closeButton.Visibility = Visibility.Visible;
+					this.Width = screenThis.Bounds.Width;
+				}
+			}
+		}
+
+		internal void ExceptionChange()
+		{
+			int index = exceptionList.IndexOf(processActive.ProcessName);
+
+			if (index != -1)
+			{
+				exceptionList.RemoveAt(index);
+			}
+			else
+			{
+				exceptionList.Add(processActive.ProcessName);
+			}
+
+			foreach (SanebarWindow sanebarWindow in sanebarWindows)
+			{
+				sanebarWindow.ChangeFocus();
+			}
+		}
+
+		private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+			if (isPrimary)
+			{
+				Properties.Settings.Default.ExceptionList = exceptionList;
+				Properties.Settings.Default.Save();
+			}
 		}
 	}
 }

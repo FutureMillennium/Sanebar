@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
@@ -21,7 +22,9 @@ namespace Sanebar
 	/// </summary>
 	public partial class QuickLaunch : Window
 	{
-        Grid iconGrid;
+		internal WindowInteropHelper this32;
+
+		Grid iconGrid;
         Button[,] buttons;
 		string[,] actions;
 		Brush hoverBrush = new SolidColorBrush(Color.FromArgb(0x4C, 0xFF, 0xFF, 0xFF));
@@ -191,6 +194,11 @@ namespace Sanebar
 					Properties.Settings.Default.QuickLaunch.Add(actions[i, j]);
 
 			Properties.Settings.Default.Save();
+		}
+
+		private void Window_SourceInitialized(object sender, EventArgs e)
+		{
+			this32 = new WindowInteropHelper(this);
 		}
 
 		private void Window_MouseMove(object sender, MouseEventArgs e)

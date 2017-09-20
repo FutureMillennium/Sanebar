@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -211,6 +212,33 @@ namespace Sanebar
 			SetWindowCompositionAttribute(windowHelper.Handle, ref data);
 
 			Marshal.FreeHGlobal(accentPtr);
+		}
+
+
+		[StructLayout(LayoutKind.Sequential)]
+		internal struct RECT
+		{
+			public int Left;
+			public int Top;
+			public int Right;
+			public int Bottom;
+		}
+
+		[DllImport("user32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		internal static extern bool GetWindowRect(IntPtr hWnd, ref RECT lpRect);
+
+
+
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out uint ProcessId);
+
+		internal static Process GetProcessName(IntPtr hwnd)
+		{
+			uint pid;
+			GetWindowThreadProcessId(hwnd, out pid);
+			return Process.GetProcessById((int)pid);
 		}
 	}
 }

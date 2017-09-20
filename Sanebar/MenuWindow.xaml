@@ -1,0 +1,22 @@
+﻿<Window x:Class="Sanebar.MenuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Sanebar"
+        mc:Ignorable="d"
+		Title="Sanebar"
+        Height="300" Width="300" ShowInTaskbar="False" WindowStyle="None" Top="0" Left="0" Closing="Window_Closing" Deactivated="Window_Deactivated" Topmost="True" ResizeMode="NoResize" SourceInitialized="Window_SourceInitialized" Background="#FF383838" Foreground="White">
+	<Grid>
+		<StackPanel>
+			<CheckBox x:Name="hideCheckbox" Margin="5" Click="hideCheckbox_Click" Foreground="White">Hide</CheckBox>
+			<Label Cursor="Hand">
+				<Label.Foreground>
+					<SolidColorBrush Color="#FFA56AFF"/>
+				</Label.Foreground>
+				<TextBlock TextDecorations="Underline">About Sanebar by Zdeněk Gromnica</TextBlock>
+			</Label>
+			<Button x:Name="quitButton" Click="quitButton_Click" Padding="5">Quit</Button>
+		</StackPanel>
+	</Grid>
+</Window>
