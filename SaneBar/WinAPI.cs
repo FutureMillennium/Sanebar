@@ -27,9 +27,14 @@ namespace Sanebar
 
 
 		public const uint WINEVENT_OUTOFCONTEXT = 0;
+		public const uint WINEVENT_SKIPOWNPROCESS = 0x0002; // Don't call back for events on installer's process
+
 		public const uint EVENT_OBJECT_LOCATIONCHANGE = 0x800B; // hwnd ID idChild is moved/sized item
 		public const uint EVENT_OBJECT_NAMECHANGE = 0x800C; // hwnd ID idChild is item w/ name change
 		public const uint EVENT_SYSTEM_FOREGROUND = 3;
+
+		public const int OBJID_WINDOW = 0;
+		public const int CHILDID_SELF = 0;
 
 		public delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 

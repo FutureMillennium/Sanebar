@@ -108,9 +108,9 @@ namespace Sanebar
 
 				winEventDelegate = new WinAPI.WinEventDelegate(WinEventProc);
                 // EVENT_SYSTEM_FOREGROUND
-                IntPtr m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT);
+                IntPtr m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
                 // EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE
-                m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_OBJECT_LOCATIONCHANGE, WinAPI.EVENT_OBJECT_NAMECHANGE, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT);
+                m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_OBJECT_LOCATIONCHANGE, WinAPI.EVENT_OBJECT_NAMECHANGE, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
 			}
 			this.Height = System.Windows.Forms.SystemInformation.CaptionHeight;
 
@@ -144,7 +144,10 @@ namespace Sanebar
 					menuWindow.hideCheckbox.Content = "Hide on " + processActive.MainModule.FileVersionInfo.FileDescription;
 				}
 
-				menuWindow.Left = this.Left + pos.X;
+				if (this.Left + pos.X + menuWindow.Width > screenThis.Bounds.Right)
+					menuWindow.Left = screenThis.Bounds.Right - menuWindow.Width;
+				else
+					menuWindow.Left = this.Left + pos.X;
 				menuWindow.Top = this.Top + pos.Y;
 				menuWindow.Show();
 				menuWindow.Activate();
@@ -163,7 +166,8 @@ namespace Sanebar
 		// Windows event
 		public void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
 		{
-			switch (eventType)
+			if (hwnd != IntPtr.Zero && idObject == OBJID_WINDOW && idChild == CHILDID_SELF)
+				switch (eventType)
 			{
 				// Active window changed
 				case WinAPI.EVENT_SYSTEM_FOREGROUND:
