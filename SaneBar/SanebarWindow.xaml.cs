@@ -255,41 +255,42 @@ namespace Sanebar
 
 			foreach (SanebarWindow sanebarWindow in sanebarWindows)
 			{
+				if (updateFocus)
+					sanebarWindow.ChangeFocus();
 				if (updateTitle)
 					sanebarWindow.ChangeTitle();
 				if (updateIcon)
 					sanebarWindow.ChangeIcon();
-				if (updateFocus)
-					sanebarWindow.ChangeFocus();
 			}
 		}
 
 		internal void ChangeTitle()
 		{
-			titleActiveWindowLabel.Content = titleActiveWindow;
+			if (screenActiveWindow.Equals(screenThis))
+			{
+				titleActiveWindowLabel.Content = titleActiveWindow;
+			}
 		}
 
 		internal void ChangeIcon()
 		{
-			if (iconActiveWindow == null)
+			if (screenActiveWindow.Equals(screenThis))
 			{
-				iconActiveWindowImage.Visibility = System.Windows.Visibility.Hidden;
-			}
-			else
-			{
-				iconActiveWindowImage.Source = iconActiveWindow;
-				if (isCollapsed == false)
-					iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
+				if (iconActiveWindow == null)
+				{
+					iconActiveWindowImage.Visibility = System.Windows.Visibility.Hidden;
+				}
+				else
+				{
+					iconActiveWindowImage.Source = iconActiveWindow;
+					if (isCollapsed == false)
+						iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
+				}
 			}
 		}
 
 		internal void ChangeFocus()
 		{
-			if (isMaximisedActiveWindow)
-				maxButton.Content = "\xE923";
-			else
-				maxButton.Content = "\xE922";
-
 			if (screenActiveWindow.Equals(screenThis))
 			{
 				if (rectActiveWindow.Left == screenThis.Bounds.Left
@@ -309,6 +310,7 @@ namespace Sanebar
 					{
 						//if (this.Background != activeBackground)
 						this.Background = activeBackground;
+						maxButton.Content = "\xE923";
 
 						if (exceptionList.IndexOf(processActive.ProcessName) != -1)
 						{
@@ -323,6 +325,7 @@ namespace Sanebar
 					{
 						//if (this.Background != defaultBackground)
 						this.Background = defaultBackground;
+						maxButton.Content = "\xE922";
 
 						CollapsedChange(false);
 					}
@@ -336,8 +339,8 @@ namespace Sanebar
 				//if (this.Background != defaultBackground)
 				this.Background = defaultBackground;
 
-				if (this.Opacity != 0.75)
-					this.Opacity = 0.75;
+				if (this.Opacity != 0.5)
+					this.Opacity = 0.5;
 			}
 		}
 
