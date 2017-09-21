@@ -24,8 +24,7 @@ namespace Sanebar
 	{
 		internal WindowInteropHelper this32;
 		internal System.Drawing.Point? prevCursorPosition = null;
-
-		Grid iconGrid;
+		
         Button[,] buttons;
 		string[,] actions;
 		Brush hoverBrush = new SolidColorBrush(Color.FromArgb(0x4C, 0xFF, 0xFF, 0xFF));
@@ -34,24 +33,6 @@ namespace Sanebar
 		public QuickLaunch()
 		{
 			InitializeComponent();
-
-            iconGrid = new Grid
-            {
-                ColumnDefinitions =
-                {
-                    new ColumnDefinition(),
-                    new ColumnDefinition(),
-                    new ColumnDefinition(),
-                },
-                RowDefinitions =
-                {
-                    new RowDefinition(),
-                    new RowDefinition(),
-                    new RowDefinition(),
-                },
-            };
-
-            grid.Children.Add(iconGrid);
 
             buttons = new Button[3, 3];
 			actions = new string[3, 3];
@@ -72,7 +53,7 @@ namespace Sanebar
 					};
 
 					if (actions[i, j] != null)
-						buttons[i, j].Content = actions[i, j]; // @TODO icon
+						SetIcon(i, j);
 
 					iconGrid.Children.Add(buttons[i,j]);
                     Grid.SetRow(buttons[i, j], j);
@@ -155,8 +136,11 @@ namespace Sanebar
 			{
 				if (lastX != -1 && lastY != -1)
 				{
-					actions[lastX, lastY] = files[0];
-					buttons[lastX, lastY].Content = files[0]; // @TODO
+					string fileName = files[0];
+
+					actions[lastX, lastY] = fileName;
+
+					SetIcon(lastX, lastY);
 				}
 			}
 
@@ -217,6 +201,51 @@ namespace Sanebar
 		private void Window_MouseMove(object sender, MouseEventArgs e)
 		{
 			ButtonHoverOnMouseMove(e.GetPosition(this));
+		}
+
+		void SetIcon(int X, int Y)
+		{
+			string fileName = actions[X, Y];
+
+			var icon = WinAPI.GetFileIcon(fileName);
+
+			if (icon != null)
+			{
+				FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
+				string name;
+				if (fileVersionInfo.FileDescription == null)
+					name = System.IO.Path.GetFileNameWithoutExtension(fileName);
+				else
+					name = fileVersionInfo.FileDescription;
+
+				buttons[X, Y].Content = new StackPanel()
+				{
+					Children = {
+						new Image()
+						{
+							Source = WinAPI.ToImageSource(icon),
+							Stretch = Stretch.None,
+						},
+						new TextBlock()
+						{
+							Text = name,
+							TextWrapping = TextWrapping.Wrap,
+							TextAlignment = TextAlignment.Center,
+							Margin = new Thickness(5),
+						}
+					},
+				};
+			}
+			else
+			{
+				buttons[X, Y].Content = new TextBlock()
+				{
+					Text = fileName,
+					TextWrapping = TextWrapping.Wrap,
+					TextAlignment = TextAlignment.Center,
+					Margin = new Thickness(5),
+				};
+			}
 		}
 	}
 }
