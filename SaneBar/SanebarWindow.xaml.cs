@@ -308,8 +308,8 @@ namespace Sanebar
 
 					if (isMaximisedActiveWindow)
 					{
-						//if (this.Background != activeBackground)
-						this.Background = activeBackground;
+						if (this.Background.Equals(activeBackground) == false)
+							this.Background = activeBackground;
 						maxButton.Content = "\xE923";
 
 						if (exceptionList.IndexOf(processActive.ProcessName) != -1)
@@ -323,8 +323,8 @@ namespace Sanebar
 					}
 					else
 					{
-						//if (this.Background != defaultBackground)
-						this.Background = defaultBackground;
+						if (this.Background.Equals(defaultBackground) == false)
+							this.Background = defaultBackground;
 						maxButton.Content = "\xE922";
 
 						CollapsedChange(false);
@@ -336,8 +336,8 @@ namespace Sanebar
 			}
 			else
 			{
-				//if (this.Background != defaultBackground)
-				this.Background = defaultBackground;
+				if (this.Background.Equals(defaultBackground) == false)
+					this.Background = defaultBackground;
 
 				if (this.Opacity != 0.5)
 					this.Opacity = 0.5;
