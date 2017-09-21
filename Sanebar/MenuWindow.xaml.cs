@@ -25,7 +25,12 @@ namespace Sanebar
 		public MenuWindow()
         {
             InitializeComponent();
-        }
+			
+			sanebarIconImage.Source = WinAPI.ToImageSource(Properties.Resources.Sanebar);
+			// @TODO find a way to display this at the highest resolution (256×256)
+			// I refuse to have the same file multiple times in the executable
+
+		}
 
 		private void quitButton_Click(object sender, RoutedEventArgs e)
 		{
@@ -51,6 +56,11 @@ namespace Sanebar
 		private void Window_SourceInitialized(object sender, EventArgs e)
 		{
 			this32 = new WindowInteropHelper(this);
+		}
+
+		private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+		{
+			System.Diagnostics.Process.Start(e.Uri.AbsoluteUri);
 		}
 	}
 }

@@ -141,7 +141,8 @@ namespace Sanebar
 						menuWindow.hideCheckbox.IsChecked = true;
 					else
 						menuWindow.hideCheckbox.IsChecked = false;
-					menuWindow.hideCheckbox.Content = "Hide on " + processActive.MainModule.FileVersionInfo.FileDescription;
+					//menuWindow.hideCheckbox.Content = "Hide when on " + processActive.MainModule.FileVersionInfo.FileDescription;
+					menuWindow.appNameRun.Text = processActive.MainModule.FileVersionInfo.FileDescription;
 				}
 
 				if (this.Left + pos.X + menuWindow.Width > screenThis.Bounds.Right)
@@ -526,20 +527,23 @@ namespace Sanebar
 
 		internal void ExceptionChange()
 		{
-			int index = exceptionList.IndexOf(processActive.ProcessName);
+			if (processActive != null)
+			{
+				int index = exceptionList.IndexOf(processActive.ProcessName);
 
-			if (index != -1)
-			{
-				exceptionList.RemoveAt(index);
-			}
-			else
-			{
-				exceptionList.Add(processActive.ProcessName);
-			}
+				if (index != -1)
+				{
+					exceptionList.RemoveAt(index);
+				}
+				else
+				{
+					exceptionList.Add(processActive.ProcessName);
+				}
 
-			foreach (SanebarWindow sanebarWindow in sanebarWindows)
-			{
-				sanebarWindow.ChangeFocus();
+				foreach (SanebarWindow sanebarWindow in sanebarWindows)
+				{
+					sanebarWindow.ChangeFocus();
+				}
 			}
 		}
 

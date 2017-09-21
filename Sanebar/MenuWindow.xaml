@@ -6,17 +6,21 @@
         xmlns:local="clr-namespace:Sanebar"
         mc:Ignorable="d"
 		Title="Sanebar"
-        Height="300" Width="300" ShowInTaskbar="False" WindowStyle="None" Top="0" Left="0" Closing="Window_Closing" Deactivated="Window_Deactivated" Topmost="True" ResizeMode="NoResize" SourceInitialized="Window_SourceInitialized" Background="#FF383838" Foreground="White">
-	<Grid>
+        Height="300" Width="314" ShowInTaskbar="False" WindowStyle="None" Top="0" Left="0" Closing="Window_Closing" Deactivated="Window_Deactivated" Topmost="True" ResizeMode="NoResize" SourceInitialized="Window_SourceInitialized" Background="#FF2B2B2B" Foreground="White" SizeToContent="Height">
+	<Border BorderThickness="1" BorderBrush="#1EFFFFFF">
 		<StackPanel>
-			<CheckBox x:Name="hideCheckbox" Margin="5" Click="hideCheckbox_Click" Foreground="White">Hide</CheckBox>
-			<Label Cursor="Hand">
-				<Label.Foreground>
-					<SolidColorBrush Color="#FFA56AFF"/>
-				</Label.Foreground>
-				<TextBlock TextDecorations="Underline">About Sanebar by Zdeněk Gromnica</TextBlock>
-			</Label>
-			<Button x:Name="quitButton" Click="quitButton_Click" Padding="5">Quit</Button>
+			<CheckBox x:Name="hideCheckbox" Margin="5,0,0,0" Click="hideCheckbox_Click" Foreground="White" BorderThickness="0,1,1,1" VerticalContentAlignment="Center" Height="40">
+				<TextBlock>Hide when on <Run x:Name="appNameRun" Foreground="#FFBBBBBB">Sanebar</Run></TextBlock>
+			</CheckBox>
+			<Button x:Name="hideButton" Click="quitButton_Click" Padding="15,12" Style="{DynamicResource SBButtonStyle}" HorizontalContentAlignment="Left">Hide</Button>
+			
+			<Image x:Name="sanebarIconImage" Stretch="None" HorizontalAlignment="Center" Source="Resources/Sanebar.ico" Margin="0,20,0,0" SnapsToDevicePixels="True"/>
+			<TextBlock TextAlignment="Center" Margin="0,0,0,20">
+				<Run FontSize="18">Sanebar</Run><LineBreak />
+				by <Hyperlink Foreground="#ff45cdfb" NavigateUri="http://futuremillennium.com/" RequestNavigate="Hyperlink_RequestNavigate">Zdeněk Gromnica</Hyperlink>
+			</TextBlock>
+
+			<Button x:Name="quitButton" Click="quitButton_Click" Padding="15,12" Style="{DynamicResource SBButtonStyle}" HorizontalContentAlignment="Left">Quit</Button>
 		</StackPanel>
-	</Grid>
+	</Border>
 </Window>
