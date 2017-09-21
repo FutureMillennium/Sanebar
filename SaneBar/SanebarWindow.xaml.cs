@@ -35,6 +35,7 @@ namespace Sanebar
 		bool isPrimary = false;
 		bool isDoubleClick = false;
 		internal static DispatcherTimer hideQuickLaunchTimer;
+		static System.Windows.Forms.NotifyIcon notifyIcon;
 
 		static Brush defaultBackground;
 		static Brush activeBackground;
@@ -44,6 +45,7 @@ namespace Sanebar
 		internal static SanebarWindow primarySanebarWindow;
 
 		static System.Collections.Specialized.StringCollection exceptionList;
+		static bool isHidden = false;
 
 		// active window
 		static IntPtr hwndActiveWindow;
@@ -125,33 +127,15 @@ namespace Sanebar
 		{
             if (e.ChangedButton == MouseButton.Middle)
             {
-                quickLaunch.Hide();
+                //quickLaunch.Hide();
             }
             else if (e.ChangedButton == MouseButton.Right)
             {
-				if (menuWindow == null)
-					menuWindow = new MenuWindow();
-
 				var pos = e.GetPosition(this);
+				pos.X += this.Left;
+				pos.Y += this.Top;
 
-				if (processActive != null)
-				{
-					// @TODO @Speed Don't do this again if the active window hasn't changed
-					if (exceptionList.IndexOf(processActive.ProcessName) != -1)
-						menuWindow.hideCheckbox.IsChecked = true;
-					else
-						menuWindow.hideCheckbox.IsChecked = false;
-					//menuWindow.hideCheckbox.Content = "Hide when on " + processActive.MainModule.FileVersionInfo.FileDescription;
-					menuWindow.appNameRun.Text = processActive.MainModule.FileVersionInfo.FileDescription;
-				}
-
-				if (this.Left + pos.X + menuWindow.Width > screenThis.Bounds.Right)
-					menuWindow.Left = screenThis.Bounds.Right - menuWindow.Width;
-				else
-					menuWindow.Left = this.Left + pos.X;
-				menuWindow.Top = this.Top + pos.Y;
-				menuWindow.Show();
-				menuWindow.Activate();
+				MenuShow(pos);
 			}
 		}
 
@@ -167,7 +151,8 @@ namespace Sanebar
 		// Windows event
 		public void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
 		{
-			if (hwnd != IntPtr.Zero && idObject == OBJID_WINDOW && idChild == CHILDID_SELF)
+			if (isHidden == false
+				&& hwnd != IntPtr.Zero && idObject == OBJID_WINDOW && idChild == CHILDID_SELF)
 				switch (eventType)
 			{
 				// Active window changed
@@ -551,9 +536,93 @@ namespace Sanebar
 		{
 			if (isPrimary)
 			{
+				if (notifyIcon != null)
+					notifyIcon.Visible = false;
+
 				Properties.Settings.Default.ExceptionList = exceptionList;
 				Properties.Settings.Default.Save();
 			}
+		}
+
+		internal void HideAllToggle()
+		{
+			if (isHidden == true)
+			{
+				isHidden = false;
+
+				notifyIcon.Visible = false;
+
+				foreach (SanebarWindow sanebarWindow in sanebarWindows)
+				{
+					sanebarWindow.Visibility = Visibility.Visible;
+				}
+			}
+			else
+			{
+				isHidden = true;
+
+				if (notifyIcon == null)
+				{
+					notifyIcon = new System.Windows.Forms.NotifyIcon()
+					{
+						Icon = Properties.Resources.Sanebar,
+						Text = APP_TITLE,
+					};
+
+					notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
+					notifyIcon.MouseUp += NotifyIcon_MouseUp;
+				}
+
+				notifyIcon.Visible = true;
+
+				foreach (SanebarWindow sanebarWindow in sanebarWindows)
+				{
+					sanebarWindow.Visibility = Visibility.Collapsed;
+				}
+			}
+		}
+
+		private void NotifyIcon_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+		{
+			if (e.Button == System.Windows.Forms.MouseButtons.Right)
+			{
+				MenuShow(new Point(e.X, e.Y));
+			}
+		}
+
+		private void NotifyIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
+		{
+			HideAllToggle();
+		}
+
+		void MenuShow(Point pos)
+		{
+			if (menuWindow == null)
+				menuWindow = new MenuWindow();
+
+			if (processActive != null)
+			{
+				// @TODO @Speed Don't do this again if the active window hasn't changed
+				if (exceptionList.IndexOf(processActive.ProcessName) != -1)
+					menuWindow.hideCheckbox.IsChecked = true;
+				else
+					menuWindow.hideCheckbox.IsChecked = false;
+				//menuWindow.hideCheckbox.Content = "Hide when on " + processActive.MainModule.FileVersionInfo.FileDescription;
+				menuWindow.appNameRun.Text = processActive.MainModule.FileVersionInfo.FileDescription;
+			}
+
+			if (pos.X + menuWindow.Width > screenThis.Bounds.Right)
+				menuWindow.Left = pos.X - menuWindow.Width;
+			else
+				menuWindow.Left = pos.X;
+
+			if (pos.Y + menuWindow.Height > screenThis.Bounds.Bottom)
+				menuWindow.Top = pos.Y - menuWindow.Height;
+			else
+				menuWindow.Top = pos.Y;
+
+			menuWindow.Show();
+			menuWindow.Activate();
 		}
 	}
 }

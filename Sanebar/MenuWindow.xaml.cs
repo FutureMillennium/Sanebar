@@ -62,5 +62,11 @@ namespace Sanebar
 		{
 			System.Diagnostics.Process.Start(e.Uri.AbsoluteUri);
 		}
+
+		private void hideButton_Click(object sender, RoutedEventArgs e)
+		{
+			SanebarWindow.primarySanebarWindow.HideAllToggle();
+			this.Hide();
+		}
 	}
 }
