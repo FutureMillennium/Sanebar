@@ -25,7 +25,13 @@ namespace Sanebar
 		public MenuWindow()
         {
             InitializeComponent();
-			
+
+			var ver = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+			string verS = ver.Major + "." + ver.Minor;
+			if (ver.Revision != 0)
+				verS += "." + ver.Revision;
+			versionRun.Text = verS;
+
 			sanebarIconImage.Source = WinAPI.ToImageSource(Properties.Resources.Sanebar);
 			// @TODO find a way to display this at the highest resolution (256×256)
 			// I refuse to have the same file multiple times in the executable
@@ -67,6 +73,24 @@ namespace Sanebar
 		{
 			SanebarWindow.primarySanebarWindow.HideAllToggle();
 			this.Hide();
+		}
+		
+		internal void Prepare()
+		{
+			if (SanebarWindow.isHidden)
+			{
+				if (hideCheckbox.Visibility != Visibility.Collapsed)
+				{
+					hideCheckbox.Visibility = Visibility.Collapsed;
+					this.UpdateLayout();
+				}
+				hideButton.Content = "Show";
+			}
+			else
+			{
+				hideCheckbox.Visibility = Visibility.Visible;
+				hideButton.Content = "Hide";
+			}
 		}
 	}
 }

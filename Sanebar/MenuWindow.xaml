@@ -15,9 +15,13 @@
 			<Button x:Name="hideButton" Click="hideButton_Click" Padding="15,12" Style="{DynamicResource SBButtonStyle}" HorizontalContentAlignment="Left">Hide</Button>
 			
 			<Image x:Name="sanebarIconImage" Stretch="None" HorizontalAlignment="Center" Source="Resources/Sanebar.ico" Margin="0,20,0,0" SnapsToDevicePixels="True"/>
-			<TextBlock TextAlignment="Center" Margin="0,0,0,20">
-				<Run FontSize="18">Sanebar</Run><LineBreak />
+			<TextBlock TextAlignment="Center" Margin="0,0,0,15">
+				<Span FontSize="18">Sanebar <Run x:Name="versionRun" Foreground="#FFBBBBBB">4.0</Run></Span><LineBreak />
 				by <Hyperlink Foreground="#ff45cdfb" NavigateUri="http://futuremillennium.com/" RequestNavigate="Hyperlink_RequestNavigate">Zdeněk Gromnica</Hyperlink>
+			</TextBlock>
+
+			<TextBlock HorizontalAlignment="Center" Margin="0,0,0,20">
+				<Hyperlink Foreground="#ff45cdfb" NavigateUri="http://sanebar.ml/" RequestNavigate="Hyperlink_RequestNavigate">http://sanebar.ml</Hyperlink>
 			</TextBlock>
 
 			<Button x:Name="quitButton" Click="quitButton_Click" Padding="15,12" Style="{DynamicResource SBButtonStyle}" HorizontalContentAlignment="Left">Quit</Button>

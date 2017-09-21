@@ -45,7 +45,7 @@ namespace Sanebar
 		internal static SanebarWindow primarySanebarWindow;
 
 		static System.Collections.Specialized.StringCollection exceptionList;
-		static bool isHidden = false;
+		internal static bool isHidden = false;
 
 		// active window
 		static IntPtr hwndActiveWindow;
@@ -584,9 +584,11 @@ namespace Sanebar
 
 		private void NotifyIcon_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
 		{
-			if (e.Button == System.Windows.Forms.MouseButtons.Right)
+			//if (e.Button == System.Windows.Forms.MouseButtons.Right)
 			{
-				MenuShow(new Point(e.X, e.Y));
+				var pos = System.Windows.Forms.Cursor.Position;
+
+				MenuShow(new Point(pos.X, pos.Y));
 			}
 		}
 
@@ -611,6 +613,8 @@ namespace Sanebar
 				menuWindow.appNameRun.Text = processActive.MainModule.FileVersionInfo.FileDescription;
 			}
 
+			menuWindow.Prepare();
+
 			if (pos.X + menuWindow.Width > screenThis.Bounds.Right)
 				menuWindow.Left = pos.X - menuWindow.Width;
 			else
@@ -620,7 +624,7 @@ namespace Sanebar
 				menuWindow.Top = pos.Y - menuWindow.Height;
 			else
 				menuWindow.Top = pos.Y;
-
+			
 			menuWindow.Show();
 			menuWindow.Activate();
 		}
