@@ -109,10 +109,15 @@ namespace Sanebar
 				}
 
 				winEventDelegate = new WinAPI.WinEventDelegate(WinEventProc);
+
                 // EVENT_SYSTEM_FOREGROUND
                 IntPtr m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
+
                 // EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE
                 m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_OBJECT_LOCATIONCHANGE, WinAPI.EVENT_OBJECT_NAMECHANGE, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
+
+				// EVENT_SYSTEM_MINIMIZEEND
+				m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_MINIMIZEEND, WinAPI.EVENT_SYSTEM_MINIMIZEEND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
 			}
 			this.Height = System.Windows.Forms.SystemInformation.CaptionHeight;
 
@@ -157,6 +162,7 @@ namespace Sanebar
 			{
 				// Active window changed
 				case WinAPI.EVENT_SYSTEM_FOREGROUND:
+				case WinAPI.EVENT_SYSTEM_MINIMIZEEND:
 					{
 						if (hwndActiveWindow != hwnd)
 						{

@@ -32,6 +32,8 @@ namespace Sanebar
 		public const uint EVENT_OBJECT_LOCATIONCHANGE = 0x800B; // hwnd ID idChild is moved/sized item
 		public const uint EVENT_OBJECT_NAMECHANGE = 0x800C; // hwnd ID idChild is item w/ name change
 		public const uint EVENT_SYSTEM_FOREGROUND = 3;
+		public const uint EVENT_SYSTEM_MINIMIZEEND = 0x0017;
+
 
 		public const int OBJID_WINDOW = 0;
 		public const int CHILDID_SELF = 0;
