@@ -37,7 +37,7 @@ namespace Sanebar
 		internal static DispatcherTimer hideQuickLaunchTimer;
 		static System.Windows.Forms.NotifyIcon notifyIcon;
 
-		static Brush defaultBackground;
+		internal static Brush defaultBackground;
 		static Brush activeBackground;
 
 		static QuickLaunch quickLaunch;
@@ -69,7 +69,6 @@ namespace Sanebar
 			if (primary)
 			{
 				isPrimary = true;
-				quickLaunch = new QuickLaunch();
 				primarySanebarWindow = this;
 
 				WinAPI.DWMCOLORIZATIONPARAMS dwmColors = new WinAPI.DWMCOLORIZATIONPARAMS();
@@ -79,6 +78,8 @@ namespace Sanebar
 				//Color clrAero = Color.FromArgb(255, clr.R, clr.G, clr.B);
 				activeBackground = new SolidColorBrush(clrAero);
 				defaultBackground = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0));
+
+				quickLaunch = new QuickLaunch();
 
 				// Create a Sanebar window for each monitor
 				sanebarWindows = new SanebarWindow[System.Windows.Forms.Screen.AllScreens.Length];

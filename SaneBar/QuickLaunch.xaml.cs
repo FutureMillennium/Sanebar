@@ -30,8 +30,12 @@ namespace Sanebar
 		Brush hoverBrush = new SolidColorBrush(Color.FromArgb(0x4C, 0xFF, 0xFF, 0xFF));
 		int lastX, lastY;
 
+		TextBlock emptyMessageTextBlock = null;
+
 		public QuickLaunch()
 		{
+			bool isEmpty = true;
+
 			InitializeComponent();
 
             buttons = new Button[3, 3];
@@ -53,13 +57,29 @@ namespace Sanebar
 					};
 
 					if (actions[i, j] != null)
+					{
 						SetIcon(i, j);
+						isEmpty = false;
+					}
 
 					iconGrid.Children.Add(buttons[i,j]);
                     Grid.SetRow(buttons[i, j], j);
                     Grid.SetColumn(buttons[i, j], i);
                 }
             
+			if (isEmpty)
+			{
+				emptyMessageTextBlock = new TextBlock()
+				{
+					Text = "Drag your favourite apps here!",
+					HorizontalAlignment = HorizontalAlignment.Center,
+					VerticalAlignment = VerticalAlignment.Center,
+					Padding = new Thickness(15),
+					Foreground = Brushes.LightGray,
+					Background = SanebarWindow.defaultBackground,
+				};
+				mainGrid.Children.Add(emptyMessageTextBlock);
+			}
         }
 
 		private void Window_DragOver(object sender, DragEventArgs e)
@@ -78,12 +98,14 @@ namespace Sanebar
 
 		private void Window_DragEnter(object sender, DragEventArgs e)
 		{
-			SanebarWindow.hideQuickLaunchTimer.Stop();
+			if (SanebarWindow.hideQuickLaunchTimer != null)
+				SanebarWindow.hideQuickLaunchTimer.Stop();
 		}
 
 		private void Window_DragLeave(object sender, DragEventArgs e)
 		{
-			SanebarWindow.hideQuickLaunchTimer.Start();
+			if (SanebarWindow.hideQuickLaunchTimer != null)
+				SanebarWindow.hideQuickLaunchTimer.Start();
 
 			//ButtonHoverOnMouseMove(new Point(-1, -1));
 		}
@@ -141,6 +163,12 @@ namespace Sanebar
 					actions[lastX, lastY] = fileName;
 
 					SetIcon(lastX, lastY);
+
+					if (emptyMessageTextBlock != null)
+					{
+						mainGrid.Children.Remove(emptyMessageTextBlock);
+						emptyMessageTextBlock = null;
+					}
 				}
 			}
 

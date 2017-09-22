@@ -3,18 +3,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="QuickLaunch" Height="450" Width="450" WindowStyle="None" Background="#BF121212" AllowDrop="True" AllowsTransparency="True" DragOver="Window_DragOver" ShowInTaskbar="False" Topmost="True" DragEnter="Window_DragEnter" DragLeave="Window_DragLeave" MouseUp="Window_MouseUp" Drop="Window_Drop" MouseMove="Window_MouseMove" Loaded="Window_Loaded" Closing="Window_Closing" SourceInitialized="Window_SourceInitialized" KeyDown="Window_KeyDown">
 	<Border BorderThickness="1" BorderBrush="#1EFFFFFF">
-		<Grid x:Name="iconGrid">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition />
-				<ColumnDefinition />
-				<ColumnDefinition />
-			</Grid.ColumnDefinitions>
-			<Grid.RowDefinitions>
-				<RowDefinition />
-				<RowDefinition />
-				<RowDefinition />
-			</Grid.RowDefinitions>
-
+		<Grid x:Name="mainGrid">
+			<Grid x:Name="iconGrid">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition />
+					<ColumnDefinition />
+					<ColumnDefinition />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition />
+					<RowDefinition />
+					<RowDefinition />
+				</Grid.RowDefinitions>
+			</Grid>
 		</Grid>
 	</Border>
 </Window>
