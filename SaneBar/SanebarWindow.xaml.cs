@@ -348,14 +348,14 @@ namespace Sanebar
 			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_CLOSE, 0);
 		}
 
-		private void titleActiveWindowLabel_MouseUp(object sender, MouseButtonEventArgs e)
+		/*private void titleActiveWindowLabel_MouseUp(object sender, MouseButtonEventArgs e)
 		{
 			if (e.ChangedButton == MouseButton.Right)
 			{
 				ShowSystemMenu(e.GetPosition(this));
 				e.Handled = true;
 			}
-		}
+		}*/
 
 		private void iconActiveWindowImage_MouseUp(object sender, MouseButtonEventArgs e)
 		{
@@ -366,7 +366,7 @@ namespace Sanebar
 			else if (e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right)
 			{
 				var p = new Point();
-				p = iconActiveWindowImage.TranslatePoint(p, this);
+				p = cIconActiveWindowControl.TranslatePoint(p, this);
 				p.Y = this.Height;
 				ShowSystemMenu(p);
 				e.Handled = true;

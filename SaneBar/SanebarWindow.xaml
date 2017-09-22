@@ -13,13 +13,15 @@
     </Window.Triggers>
     <Grid>
 		<StackPanel Orientation="Horizontal">
-			<Button x:Name="quickLaunchButton" Width="40" Style="{DynamicResource SBButtonStyle}" FontFamily="Segoe MDL2 Assets" Foreground="#7FFFFFFF" FontSize="14" Background="#7F000000" PreviewMouseDown="quickLaunchButton_PreviewMouseDown" ToolTip="Sanebar Quick Launch">
+			<Button x:Name="quickLaunchButton" Width="40" Style="{DynamicResource SBButtonStyle}" FontFamily="Segoe MDL2 Assets" Foreground="#7FFFFFFF" FontSize="14" Background="#7F000000" PreviewMouseDown="quickLaunchButton_PreviewMouseDown" ToolTip="Sanebar Launcher">
 				&#xE8A9;
 			</Button>
-			<ContentControl HorizontalAlignment="Left" VerticalContentAlignment="Center" MouseUp="iconActiveWindowImage_MouseUp" MouseDoubleClick="ContentControl_MouseDoubleClick">
-				<Image x:Name="iconActiveWindowImage" Width="16" HorizontalAlignment="Left" Height="16" Margin="7,0,0,0" VerticalAlignment="Center" UseLayoutRounding="True"/>
+			<ContentControl x:Name="cIconActiveWindowControl" HorizontalAlignment="Left" VerticalContentAlignment="Center" MouseUp="iconActiveWindowImage_MouseUp" MouseDoubleClick="ContentControl_MouseDoubleClick">
+				<Border Padding="7,0,0,0" Background="#00000000">
+					<Image x:Name="iconActiveWindowImage" Width="16" HorizontalAlignment="Left" Height="16" VerticalAlignment="Center" UseLayoutRounding="True"/>
+				</Border>
 			</ContentControl>
-			<Label x:Name="titleActiveWindowLabel" Content="Sanebar" Foreground="White" Padding="5,0,0,0" VerticalContentAlignment="Center" FontSize="12" HorizontalAlignment="Left" MouseUp="titleActiveWindowLabel_MouseUp" />
+			<Label x:Name="titleActiveWindowLabel" Content="Sanebar" Foreground="White" Padding="5,0,0,0" VerticalContentAlignment="Center" FontSize="12" HorizontalAlignment="Left" />
 		</StackPanel>
 		<StackPanel x:Name="rightButtonsStackPanel" HorizontalAlignment="Right" Orientation="Horizontal">
 			<Button x:Name="minButton" Width="50" Click="minButton_Click" Style="{DynamicResource SBButtonStyle}" FontFamily="Segoe MDL2 Assets" Foreground="#7FFFFFFF" FontSize="10">
