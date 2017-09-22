@@ -203,6 +203,12 @@ namespace Sanebar
 			ButtonHoverOnMouseMove(e.GetPosition(this));
 		}
 
+		private void Window_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.Escape)
+				Done();
+		}
+
 		void SetIcon(int X, int Y)
 		{
 			string fileName = actions[X, Y];
@@ -211,9 +217,21 @@ namespace Sanebar
 
 			if (icon != null)
 			{
-				FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
+				// @TODO add is folder check
+				FileVersionInfo fileVersionInfo = null;
+				try
+				{
+					fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
+				}
+				catch
+				{
+
+				}
+				
 				string name;
-				if (fileVersionInfo.FileDescription == null)
+				if (fileVersionInfo == null)
+					name = System.IO.Path.GetFileName(fileName);
+				else if (fileVersionInfo.FileDescription == null)
 					name = System.IO.Path.GetFileNameWithoutExtension(fileName);
 				else
 					name = fileVersionInfo.FileDescription;

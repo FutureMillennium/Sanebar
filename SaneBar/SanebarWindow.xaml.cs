@@ -119,13 +119,14 @@ namespace Sanebar
 				// EVENT_SYSTEM_MINIMIZEEND
 				m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_MINIMIZEEND, WinAPI.EVENT_SYSTEM_MINIMIZEEND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
 			}
-			this.Height = System.Windows.Forms.SystemInformation.CaptionHeight;
 
 			exceptionList = Properties.Settings.Default.ExceptionList;
 			if (exceptionList == null)
 				exceptionList = new System.Collections.Specialized.StringCollection();
 
 			InitializeComponent();
+
+			this.Height = System.Windows.Forms.SystemInformation.CaptionHeight;
 		}
 
 		private void Window_MouseUp(object sender, MouseButtonEventArgs e)
@@ -357,13 +358,16 @@ namespace Sanebar
 
 		private void iconActiveWindowImage_MouseUp(object sender, MouseButtonEventArgs e)
 		{
-			if (isDoubleClick)
+			if (e.ChangedButton == MouseButton.Left && isDoubleClick)
 			{
 				isDoubleClick = false;
 			}
 			else if (e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right)
 			{
-				ShowSystemMenu(new Point(0, this.Height));
+				var p = new Point();
+				p = iconActiveWindowImage.TranslatePoint(p, this);
+				p.Y = this.Height;
+				ShowSystemMenu(p);
 				e.Handled = true;
 			}
 		}
@@ -376,16 +380,22 @@ namespace Sanebar
 
 		private void ContentControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 		{
-			isDoubleClick = true;
-			CloseActiveWindow();
-			e.Handled = true;
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				isDoubleClick = true;
+				CloseActiveWindow();
+				e.Handled = true;
+			}
 		}
 
 		private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
 		{
-			if (isDoubleClick == false)
-				ToggleMaximiseActiveWindow();
-			e.Handled = true;
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				if (isDoubleClick == false)
+					ToggleMaximiseActiveWindow();
+				e.Handled = true;
+			}
 		}
 
 		private void ToggleMaximiseActiveWindow()
@@ -468,16 +478,20 @@ namespace Sanebar
 		{
 			if (e.ChangedButton == MouseButton.Middle)
 			{
-				var pos = e.GetPosition(this);
-
-				quickLaunch.prevCursorPosition = new System.Drawing.Point((int)(this.Left + pos.X), (int)(this.Top + pos.Y));
-
-				ShowQuickLaunch(e.GetPosition(this));
-
-				System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)(quickLaunch.Left + quickLaunch.Width / 2), (int)(quickLaunch.Top + quickLaunch.Height / 2));
-				System.Windows.Forms.Cursor.Clip = new System.Drawing.Rectangle((int)quickLaunch.Left, (int)quickLaunch.Top, (int)quickLaunch.Width, (int)quickLaunch.Height);
-				quickLaunch.CaptureMouse();
+				QuickLaunchShowAndTrap(e.GetPosition(this));
 			}
+		}
+
+		private void QuickLaunchShowAndTrap(Point pos)
+		{
+			quickLaunch.prevCursorPosition = System.Windows.Forms.Cursor.Position;
+
+			ShowQuickLaunch(pos);
+
+			quickLaunch.Activate();
+			System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)(quickLaunch.Left + quickLaunch.Width / 2), (int)(quickLaunch.Top + quickLaunch.Height / 2));
+			System.Windows.Forms.Cursor.Clip = new System.Drawing.Rectangle((int)quickLaunch.Left, (int)quickLaunch.Top, (int)quickLaunch.Width, (int)quickLaunch.Height);
+			quickLaunch.CaptureMouse();
 		}
 
 		private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -504,13 +518,17 @@ namespace Sanebar
 				if (isCollapsed)
 				{
 					this.Width = 5;
-					iconActiveWindowImage.Visibility = Visibility.Hidden;
-					closeButton.Visibility = Visibility.Hidden;
+					quickLaunchButton.Width = 5;
+					//iconActiveWindowImage.Visibility = Visibility.Hidden;
+					//closeButton.Visibility = Visibility.Hidden;
+					rightButtonsStackPanel.Visibility = Visibility.Hidden;
 				}
 				else
 				{
-					iconActiveWindowImage.Visibility = Visibility.Visible;
-					closeButton.Visibility = Visibility.Visible;
+					//iconActiveWindowImage.Visibility = Visibility.Visible;
+					//closeButton.Visibility = Visibility.Visible;
+					rightButtonsStackPanel.Visibility = Visibility.Visible;
+					quickLaunchButton.Width = 40;
 					this.Width = screenThis.Bounds.Width;
 				}
 			}
@@ -633,6 +651,15 @@ namespace Sanebar
 			
 			menuWindow.Show();
 			menuWindow.Activate();
+		}
+
+		private void quickLaunchButton_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+		{
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				QuickLaunchShowAndTrap(new Point());
+				e.Handled = true;
+			}
 		}
 	}
 }
