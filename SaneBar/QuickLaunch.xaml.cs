@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -245,18 +246,20 @@ namespace Sanebar
 
 			if (icon != null)
 			{
-				// @TODO add is folder check
-				FileVersionInfo fileVersionInfo = null;
-				try
+				FileVersionInfo fileVersionInfo;
+				FileAttributes attr = File.GetAttributes(fileName);
+
+				if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+				{
+					fileVersionInfo = null;
+				}
+				else
 				{
 					fileVersionInfo = FileVersionInfo.GetVersionInfo(fileName);
 				}
-				catch
-				{
-
-				}
 				
 				string name;
+
 				if (fileVersionInfo == null)
 					name = System.IO.Path.GetFileName(fileName);
 				else if (fileVersionInfo.FileDescription == null)
