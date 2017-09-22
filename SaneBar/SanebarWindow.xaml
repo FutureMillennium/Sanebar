@@ -24,6 +24,9 @@
 			<Label x:Name="titleActiveWindowLabel" Content="Sanebar" Foreground="White" Padding="5,0,0,0" VerticalContentAlignment="Center" FontSize="12" HorizontalAlignment="Left" />
 		</StackPanel>
 		<StackPanel x:Name="rightButtonsStackPanel" HorizontalAlignment="Right" Orientation="Horizontal">
+			<Button x:Name="menuButton" Width="40" Style="{DynamicResource SBButtonStyle}" FontFamily="Segoe MDL2 Assets" Foreground="#7FFFFFFF" FontSize="14" Background="#33000000" Click="menuButton_Click">
+				&#xE712;
+			</Button>
 			<Button x:Name="minButton" Width="50" Click="minButton_Click" Style="{DynamicResource SBButtonStyle}" FontFamily="Segoe MDL2 Assets" Foreground="#7FFFFFFF" FontSize="10">
 				&#xE921;
 			</Button>

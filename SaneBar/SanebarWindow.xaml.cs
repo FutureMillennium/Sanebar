@@ -662,5 +662,15 @@ namespace Sanebar
 				e.Handled = true;
 			}
 		}
+
+		private void menuButton_Click(object sender, RoutedEventArgs e)
+		{
+			var p = new Point();
+			p = menuButton.TranslatePoint(p, this);
+			p.X += this.Left + menuButton.Width;
+			p.Y = this.Top + this.Height;
+
+			MenuShow(p);
+		}
 	}
 }
