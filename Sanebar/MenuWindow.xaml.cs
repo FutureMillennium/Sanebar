@@ -21,6 +21,7 @@ namespace Sanebar
     public partial class MenuWindow : Window
     {
 		internal WindowInteropHelper this32;
+		internal string processName;
 
 		public MenuWindow()
         {
@@ -89,7 +90,10 @@ namespace Sanebar
 			}
 			else
 			{
-				hideCheckbox.Visibility = Visibility.Visible;
+				if (processName == null)
+					hideCheckbox.Visibility = Visibility.Collapsed;
+				else
+					hideCheckbox.Visibility = Visibility.Visible;
 				hideButton.Content = "Hide";
 			}
 		}

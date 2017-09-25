@@ -273,8 +273,7 @@ namespace Sanebar
 				else
 				{
 					iconActiveWindowImage.Source = iconActiveWindow;
-					if (isCollapsed == false)
-						iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
+					iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
 				}
 			}
 		}
@@ -607,13 +606,31 @@ namespace Sanebar
 
 		void MenuShow(Point pos)
 		{
+			string processName;
+
 			if (menuWindow == null)
 				menuWindow = new MenuWindow();
 
 			if (processActive != null)
 			{
+				try
+				{
+					processName = processActive.ProcessName;
+				}
+				catch
+				{
+					processName = null;
+				}
+			}
+			else
+				processName = null;
+
+			if (processName != null)
+			{
 				// @TODO @Speed Don't do this again if the active window hasn't changed
-				if (exceptionList.IndexOf(processActive.ProcessName) != -1)
+				menuWindow.hideCheckbox.Visibility = Visibility.Visible;
+
+				if (exceptionList.IndexOf(processName) != -1)
 					menuWindow.hideCheckbox.IsChecked = true;
 				else
 					menuWindow.hideCheckbox.IsChecked = false;
@@ -628,6 +645,7 @@ namespace Sanebar
 				}
 			}
 
+			menuWindow.processName = processName;
 			menuWindow.Prepare();
 
 			if (pos.X + menuWindow.Width > screenThis.Bounds.Right)
