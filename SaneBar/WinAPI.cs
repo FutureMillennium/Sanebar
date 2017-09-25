@@ -120,12 +120,19 @@ namespace Sanebar
 
 		public static ImageSource ToImageSource(Icon icon)
 		{
-			ImageSource imageSource = Imaging.CreateBitmapSourceFromHIcon(
-				icon.Handle,
-				Int32Rect.Empty,
-				BitmapSizeOptions.FromEmptyOptions());
+			try
+			{
+				ImageSource imageSource = Imaging.CreateBitmapSourceFromHIcon(
+					icon.Handle,
+					Int32Rect.Empty,
+					BitmapSizeOptions.FromEmptyOptions());
 
-			return imageSource;
+				return imageSource;
+			}
+			catch
+			{
+				return null;
+			}
 		}
 
 
