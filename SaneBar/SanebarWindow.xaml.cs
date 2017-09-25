@@ -518,8 +518,9 @@ namespace Sanebar
 
 				if (isCollapsed)
 				{
-					this.Width = 5;
-					quickLaunchButton.Width = 5;
+					this.Width = 6;
+					quickLaunchButton.Width = 6;
+					iQuickLaunchImage.Margin = new Thickness(-13, 0, 0, 0);
 					//iconActiveWindowImage.Visibility = Visibility.Hidden;
 					//closeButton.Visibility = Visibility.Hidden;
 					rightButtonsStackPanel.Visibility = Visibility.Hidden;
@@ -530,6 +531,7 @@ namespace Sanebar
 					//closeButton.Visibility = Visibility.Visible;
 					rightButtonsStackPanel.Visibility = Visibility.Visible;
 					quickLaunchButton.Width = 40;
+					iQuickLaunchImage.Margin = new Thickness();
 					this.Width = screenThis.Bounds.Width;
 				}
 			}
