@@ -25,6 +25,7 @@ namespace Sanebar
 		public MenuWindow()
         {
             InitializeComponent();
+			this.Title = App.APP_TITLE;
 
 			var ver = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
 			string verS = ver.Major + "." + ver.Minor;

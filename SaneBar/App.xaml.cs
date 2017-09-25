@@ -13,5 +13,6 @@ namespace Sanebar
 	/// </summary>
 	public partial class App : Application
 	{
+		internal const string APP_TITLE = "Sanebar";
 	}
 }

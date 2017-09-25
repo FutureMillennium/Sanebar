@@ -25,7 +25,6 @@ namespace Sanebar
 	/// </summary>
 	public partial class SanebarWindow : Window
 	{
-		internal const string APP_TITLE = "Sanebar";
 
 		SanebarWindow[] sanebarWindows;
 
@@ -56,7 +55,7 @@ namespace Sanebar
 		static RECT rectActiveWindow;
 		static Process processActive;
 
-		WinAPI.WinEventDelegate winEventDelegate; // Delegate needs to be declared here to avoid being garbage collected
+		WinAPI.WinEventDelegate winEventDelegate;
 
 		public SanebarWindow() : this(true)
 		{
@@ -81,6 +80,7 @@ namespace Sanebar
 
 				quickLaunch = new QuickLaunch();
 
+
 				// Create a Sanebar window for each monitor
 				sanebarWindows = new SanebarWindow[System.Windows.Forms.Screen.AllScreens.Length];
 				sanebarWindows[0] = this;
@@ -90,7 +90,6 @@ namespace Sanebar
 				{
 					if (screen.Primary == true)
 					{
-						// Set size
 						this.Top = screen.WorkingArea.Top;
 						this.Left = screen.WorkingArea.Left;
 						this.Width = screen.WorkingArea.Right - screen.WorkingArea.Left;
@@ -98,7 +97,6 @@ namespace Sanebar
 					}
 					else
 					{
-						// Set size
 						sanebarWindows[i] = new SanebarWindow(false);
 						sanebarWindows[i].Top = screen.WorkingArea.Top;
 						sanebarWindows[i].Left = screen.WorkingArea.Left;
@@ -108,6 +106,7 @@ namespace Sanebar
 						i++;
 					}
 				}
+
 
 				winEventDelegate = new WinAPI.WinEventDelegate(WinEventProc);
 
@@ -127,16 +126,13 @@ namespace Sanebar
 
 			InitializeComponent();
 
+			this.Title = App.APP_TITLE;
 			this.Height = System.Windows.Forms.SystemInformation.CaptionHeight;
 		}
 
 		private void Window_MouseUp(object sender, MouseButtonEventArgs e)
 		{
-            if (e.ChangedButton == MouseButton.Middle)
-            {
-                //quickLaunch.Hide();
-            }
-            else if (e.ChangedButton == MouseButton.Right)
+            if (e.ChangedButton == MouseButton.Right)
             {
 				var pos = e.GetPosition(this);
 				pos.X += this.Left;
@@ -150,7 +146,7 @@ namespace Sanebar
 		{
 			this32 = new WindowInteropHelper(this);
 
-			// can’t get focus (WS_EX_NOACTIVATE)
+			// WS_EX_NOACTIVATE – doesn't get focus
 			int exStyle = WinAPI.GetWindowLong(this32.Handle, WinAPI.GWL_EXSTYLE);
 			WinAPI.SetWindowLong(this32.Handle, WinAPI.GWL_EXSTYLE, exStyle | WinAPI.WS_EX_NOACTIVATE);
 		}
@@ -222,7 +218,7 @@ namespace Sanebar
 				processActive = WinAPI.GetProcessName(hwndActiveWindow);
 			}
 
-			if (updateFocus) // screenActiveWindow == null || 
+			if (updateFocus)
 			{
 				screenActiveWindow = System.Windows.Forms.Screen.FromHandle(hwndActiveWindow);
 				WinAPI.GetWindowRect(hwndActiveWindow, ref rectActiveWindow); // @TODO if false?
@@ -348,15 +344,6 @@ namespace Sanebar
 			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_CLOSE, 0);
 		}
 
-		/*private void titleActiveWindowLabel_MouseUp(object sender, MouseButtonEventArgs e)
-		{
-			if (e.ChangedButton == MouseButton.Right)
-			{
-				ShowSystemMenu(e.GetPosition(this));
-				e.Handled = true;
-			}
-		}*/
-
 		private void iconActiveWindowImage_MouseUp(object sender, MouseButtonEventArgs e)
 		{
 			if (e.ChangedButton == MouseButton.Left && isDoubleClick)
@@ -415,14 +402,15 @@ namespace Sanebar
 
 		private void Window_Drop(object sender, DragEventArgs e)
 		{
-			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			// @TODO?
+			/*if (e.Data.GetDataPresent(DataFormats.FileDrop))
 			{
-				/*string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 				if (files.Length > 0)
 				{
 					OpenFile(files[0]);
-				}*/
-			}
+				}
+			}*/
 		}
 
 		private void Window_DragLeave(object sender, DragEventArgs e)
@@ -521,14 +509,10 @@ namespace Sanebar
 					this.Width = 6;
 					quickLaunchButton.Width = 6;
 					iQuickLaunchImage.Margin = new Thickness(-13, 0, 0, 0);
-					//iconActiveWindowImage.Visibility = Visibility.Hidden;
-					//closeButton.Visibility = Visibility.Hidden;
 					rightButtonsStackPanel.Visibility = Visibility.Hidden;
 				}
 				else
 				{
-					//iconActiveWindowImage.Visibility = Visibility.Visible;
-					//closeButton.Visibility = Visibility.Visible;
 					rightButtonsStackPanel.Visibility = Visibility.Visible;
 					quickLaunchButton.Width = 40;
 					iQuickLaunchImage.Margin = new Thickness();
@@ -593,7 +577,7 @@ namespace Sanebar
 					notifyIcon = new System.Windows.Forms.NotifyIcon()
 					{
 						Icon = Properties.Resources.Sanebar,
-						Text = APP_TITLE,
+						Text = App.APP_TITLE,
 					};
 
 					notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
@@ -611,12 +595,9 @@ namespace Sanebar
 
 		private void NotifyIcon_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
 		{
-			//if (e.Button == System.Windows.Forms.MouseButtons.Right)
-			{
-				var pos = System.Windows.Forms.Cursor.Position;
+			var pos = System.Windows.Forms.Cursor.Position;
 
-				MenuShow(new Point(pos.X, pos.Y));
-			}
+			MenuShow(new Point(pos.X, pos.Y));
 		}
 
 		private void NotifyIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -636,8 +617,15 @@ namespace Sanebar
 					menuWindow.hideCheckbox.IsChecked = true;
 				else
 					menuWindow.hideCheckbox.IsChecked = false;
-				//menuWindow.hideCheckbox.Content = "Hide when on " + processActive.MainModule.FileVersionInfo.FileDescription;
-				menuWindow.appNameRun.Text = processActive.MainModule.FileVersionInfo.FileDescription;
+
+				try
+				{
+					menuWindow.appNameRun.Text = processActive.MainModule.FileVersionInfo.FileDescription;
+				}
+				catch
+				{
+					menuWindow.appNameRun.Text = titleActiveWindow; // @TODO titleActiveWindow might be empty?
+				}
 			}
 
 			menuWindow.Prepare();

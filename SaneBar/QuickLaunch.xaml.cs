@@ -50,7 +50,6 @@ namespace Sanebar
 
 					buttons[i, j] = new Button
                     {
-                        //Content = $"{i}{j}",
 						//Style = (Style)FindResource("SBButtonStyle"),
 						Background = Brushes.Transparent,
 						Foreground = Brushes.White,
@@ -85,16 +84,14 @@ namespace Sanebar
 
 		private void Window_DragOver(object sender, DragEventArgs e)
 		{
-			//if (e.Data.GetDataPresent(DataFormats.FileDrop))
-			{
-				if (e.AllowedEffects == DragDropEffects.Link)
-					e.Effects = DragDropEffects.Link;
-				else
-					e.Effects = DragDropEffects.Copy;
-				e.Handled = true;
-			}
+			// assuming the drop is of a valid type (from SanebarWindow)
+			if (e.AllowedEffects == DragDropEffects.Link)
+				e.Effects = DragDropEffects.Link;
+			else
+				e.Effects = DragDropEffects.Copy;
+			e.Handled = true;
 
-			ButtonHoverOnMouseMove(e.GetPosition(this));
+			UpdateButtonHoverOnMouseMove(e.GetPosition(this));
 		}
 
 		private void Window_DragEnter(object sender, DragEventArgs e)
@@ -108,7 +105,7 @@ namespace Sanebar
 			if (SanebarWindow.hideQuickLaunchTimer != null)
 				SanebarWindow.hideQuickLaunchTimer.Start();
 
-			//ButtonHoverOnMouseMove(new Point(-1, -1));
+			//ButtonHoverOnMouseMove(new Point(-1, -1)); // @TODO
 		}
 
 		void Done()
@@ -136,7 +133,7 @@ namespace Sanebar
 					catch (Exception ex)
 					{
 						new Thread(() => {
-							MessageBox.Show(ex.Message, "Error – " + SanebarWindow.APP_TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
+							MessageBox.Show(ex.Message, "Error – " + App.APP_TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
 						}).Start();
 					}
 				}
@@ -176,7 +173,7 @@ namespace Sanebar
 			Done();
 		}
 
-		void ButtonHoverOnMouseMove(Point pos)
+		void UpdateButtonHoverOnMouseMove(Point pos)
 		{
 			int x, y;
 
@@ -229,7 +226,7 @@ namespace Sanebar
 
 		private void Window_MouseMove(object sender, MouseEventArgs e)
 		{
-			ButtonHoverOnMouseMove(e.GetPosition(this));
+			UpdateButtonHoverOnMouseMove(e.GetPosition(this));
 		}
 
 		private void Window_KeyDown(object sender, KeyEventArgs e)
