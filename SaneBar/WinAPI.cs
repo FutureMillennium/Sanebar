@@ -311,5 +311,8 @@ namespace Sanebar
 			DestroyIcon(info.hIcon);
 			return icoResult;
 		}
+
+		[DllImport("user32.dll")]
+		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 	}
 }

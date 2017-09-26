@@ -25,6 +25,16 @@ namespace Sanebar
 	/// </summary>
 	public partial class SanebarWindow : Window
 	{
+		class WindowInfo
+		{
+			internal IntPtr hwnd;
+			internal string title;
+			internal ImageSource icon;
+			internal System.Windows.Forms.Screen screen;
+			internal bool isMaximised;
+			internal RECT rect;
+			internal Process process;
+		}
 
 		SanebarWindow[] sanebarWindows;
 
@@ -35,6 +45,7 @@ namespace Sanebar
 		bool isDoubleClick = false;
 		internal static DispatcherTimer hideQuickLaunchTimer;
 		static System.Windows.Forms.NotifyIcon notifyIcon;
+		List<IntPtr> hooks = new List<IntPtr>();
 
 		internal static Brush defaultBackground;
 		static Brush activeBackground;
@@ -46,14 +57,8 @@ namespace Sanebar
 		static System.Collections.Specialized.StringCollection exceptionList;
 		internal static bool isHidden = false;
 
-		// active window
-		static IntPtr hwndActiveWindow;
-		static string titleActiveWindow;
-		static ImageSource iconActiveWindow;
-		static System.Windows.Forms.Screen screenActiveWindow;
-		static bool isMaximisedActiveWindow;
-		static RECT rectActiveWindow;
-		static Process processActive;
+		static WindowInfo activeWindow;
+		WindowInfo currentWindow;
 
 		WinAPI.WinEventDelegate winEventDelegate;
 
@@ -112,12 +117,15 @@ namespace Sanebar
 
                 // EVENT_SYSTEM_FOREGROUND
                 IntPtr m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
+				hooks.Add(m_hhook);
 
-                // EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE
-                m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_OBJECT_LOCATIONCHANGE, WinAPI.EVENT_OBJECT_NAMECHANGE, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
+				// EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE
+				m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_OBJECT_LOCATIONCHANGE, WinAPI.EVENT_OBJECT_NAMECHANGE, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
+				hooks.Add(m_hhook);
 
 				// EVENT_SYSTEM_MINIMIZEEND
 				m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_MINIMIZEEND, WinAPI.EVENT_SYSTEM_MINIMIZEEND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
+				hooks.Add(m_hhook);
 			}
 
 			exceptionList = Properties.Settings.Default.ExceptionList;
@@ -162,7 +170,7 @@ namespace Sanebar
 				case WinAPI.EVENT_SYSTEM_FOREGROUND:
 				case WinAPI.EVENT_SYSTEM_MINIMIZEEND:
 					{
-						if (hwndActiveWindow != hwnd)
+						if (activeWindow == null || activeWindow.hwnd != hwnd)
 						{
 							bool isOwn = false;
 
@@ -183,7 +191,8 @@ namespace Sanebar
 									|| quickLaunch.this32 == null
 									|| quickLaunch.this32.Handle != hwnd))
 							{
-								hwndActiveWindow = hwnd;
+								activeWindow = new WindowInfo();
+								activeWindow.hwnd = hwnd;
 								Update(true, true, true, true);
 							}
 						}
@@ -192,7 +201,7 @@ namespace Sanebar
 				// Window name change
 				case WinAPI.EVENT_OBJECT_NAMECHANGE:
 					{
-						if (hwnd == hwndActiveWindow)
+						if (activeWindow != null && hwnd == activeWindow.hwnd)
 						{
 							Update(true, false, false, false);
 						}
@@ -201,7 +210,7 @@ namespace Sanebar
 				// Window location/size change
 				case WinAPI.EVENT_OBJECT_LOCATIONCHANGE:
 					{
-						if (hwnd != IntPtr.Zero && hwnd == hwndActiveWindow)
+						if (activeWindow != null && hwnd == activeWindow.hwnd)
 						{
 							Update(false, false, true, false);
 						}
@@ -215,38 +224,38 @@ namespace Sanebar
 		{
 			if (processUpdate)
 			{
-				processActive = WinAPI.GetProcessName(hwndActiveWindow);
+				activeWindow.process = WinAPI.GetProcessName(activeWindow.hwnd);
 			}
 
 			if (updateFocus)
 			{
-				screenActiveWindow = System.Windows.Forms.Screen.FromHandle(hwndActiveWindow);
-				WinAPI.GetWindowRect(hwndActiveWindow, ref rectActiveWindow); // @TODO if false?
-				isMaximisedActiveWindow = WinAPI.IsZoomed(hwndActiveWindow);
+				activeWindow.screen = System.Windows.Forms.Screen.FromHandle(activeWindow.hwnd);
+				WinAPI.GetWindowRect(activeWindow.hwnd, ref activeWindow.rect); // @TODO if false?
+				activeWindow.isMaximised = WinAPI.IsZoomed(activeWindow.hwnd);
 			}
 
 			if (updateTitle)
 			{
-				titleActiveWindow = WinAPI.GetWindowTitle(hwndActiveWindow);
+				activeWindow.title = WinAPI.GetWindowTitle(activeWindow.hwnd);
 			}
 
 			if (updateIcon)
 			{
-				System.Drawing.Icon icon = WinAPI.GetAppIcon(hwndActiveWindow);
+				System.Drawing.Icon icon = WinAPI.GetAppIcon(activeWindow.hwnd);
 				if (icon != null)
 				{
-					iconActiveWindow = WinAPI.ToImageSource(icon);
+					activeWindow.icon = WinAPI.ToImageSource(icon);
 				}
 				else
 				{
-					iconActiveWindow = null;
+					activeWindow.icon = null;
 				}
 			}
 
 			foreach (SanebarWindow sanebarWindow in sanebarWindows)
 			{
 				if (updateFocus)
-					sanebarWindow.ChangeFocus();
+					sanebarWindow.ChangeFocus(updateTitle, updateIcon);
 				if (updateTitle)
 					sanebarWindow.ChangeTitle();
 				if (updateIcon)
@@ -256,36 +265,37 @@ namespace Sanebar
 
 		internal void ChangeTitle()
 		{
-			if (screenActiveWindow.Equals(screenThis))
+			if (activeWindow.screen.Equals(screenThis))
 			{
-				titleActiveWindowLabel.Content = titleActiveWindow;
+				titleActiveWindowLabel.Content = activeWindow.title;
 			}
 		}
 
 		internal void ChangeIcon()
 		{
-			if (screenActiveWindow.Equals(screenThis))
+			if (activeWindow.screen.Equals(screenThis))
 			{
-				if (iconActiveWindow == null)
+				if (activeWindow.icon == null)
 				{
 					iconActiveWindowImage.Visibility = System.Windows.Visibility.Hidden;
 				}
 				else
 				{
-					iconActiveWindowImage.Source = iconActiveWindow;
+					iconActiveWindowImage.Source = activeWindow.icon;
 					iconActiveWindowImage.Visibility = System.Windows.Visibility.Visible;
 				}
 			}
 		}
 
-		internal void ChangeFocus()
+		internal void ChangeFocus(bool isTitleUpdated, bool isIconUpdated)
 		{
-			if (screenActiveWindow.Equals(screenThis))
+			if (activeWindow.screen.Equals(screenThis))
 			{
-				if (rectActiveWindow.Left == screenThis.Bounds.Left
-					&& rectActiveWindow.Top == screenThis.Bounds.Top
-					&& rectActiveWindow.Right == screenThis.Bounds.Right
-					&& rectActiveWindow.Bottom == screenThis.Bounds.Bottom)
+				// hide on fullscreen app
+				if (activeWindow.rect.Left == screenThis.Bounds.Left
+					&& activeWindow.rect.Top == screenThis.Bounds.Top
+					&& activeWindow.rect.Right == screenThis.Bounds.Right
+					&& activeWindow.rect.Bottom == screenThis.Bounds.Bottom)
 				{
 					if (this.Visibility == Visibility.Visible)
 						this.Visibility = Visibility.Collapsed;
@@ -295,13 +305,13 @@ namespace Sanebar
 					if (this.Visibility == Visibility.Collapsed)
 						this.Visibility = Visibility.Visible;
 
-					if (isMaximisedActiveWindow)
+					if (activeWindow.isMaximised)
 					{
 						if (this.Background.Equals(activeBackground) == false)
 							this.Background = activeBackground;
 						maxButton.Content = "\xE923";
 
-						if (exceptionList.IndexOf(processActive.ProcessName) != -1)
+						if (exceptionList.IndexOf(activeWindow.process.ProcessName) != -1)
 						{
 							CollapsedChange(true);
 						}
@@ -322,6 +332,14 @@ namespace Sanebar
 					if (this.Opacity != 1)
 						this.Opacity = 1;
 				}
+
+				if (currentWindow != activeWindow && (isTitleUpdated == false || isIconUpdated == false))
+				{
+					ChangeTitle();
+					ChangeIcon();
+				}
+
+				currentWindow = activeWindow;
 			}
 			else
 			{
@@ -335,12 +353,13 @@ namespace Sanebar
 
 		private void closeButton_Click(object sender, RoutedEventArgs e)
 		{
-			CloseActiveWindow();
+			CloseCurrentWindow();
 		}
 
-		private void CloseActiveWindow()
+		private void CloseCurrentWindow()
 		{
-			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_CLOSE, 0);
+			if (currentWindow != null)
+				WinAPI.SendMessage(currentWindow.hwnd, WinAPI.WM_SYSCOMMAND, WinAPI.SC_CLOSE, 0);
 		}
 
 		private void iconActiveWindowImage_MouseUp(object sender, MouseButtonEventArgs e)
@@ -361,8 +380,11 @@ namespace Sanebar
 
 		private void ShowSystemMenu(Point pos)
 		{
-			WinAPI.WORD word = new WinAPI.WORD((short)(pos.X + screenThis.Bounds.Left), (short)(pos.Y + screenThis.Bounds.Top));
-			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_GETSYSMENU, 0, word.LongValue);
+			if (currentWindow != null)
+			{
+				WinAPI.WORD word = new WinAPI.WORD((short)(pos.X + screenThis.Bounds.Left), (short)(pos.Y + screenThis.Bounds.Top));
+				WinAPI.SendMessage(currentWindow.hwnd, WinAPI.WM_GETSYSMENU, 0, word.LongValue);
+			}
 		}
 
 		private void ContentControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -370,7 +392,7 @@ namespace Sanebar
 			if (e.ChangedButton == MouseButton.Left)
 			{
 				isDoubleClick = true;
-				CloseActiveWindow();
+				CloseCurrentWindow();
 				e.Handled = true;
 			}
 		}
@@ -387,14 +409,17 @@ namespace Sanebar
 
 		private void ToggleMaximiseActiveWindow()
 		{
-			if (isMaximisedActiveWindow)
+			if (currentWindow == null)
+				return;
+
+			if (currentWindow.isMaximised)
 			{
-				WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_RESTORE, 0);
+				WinAPI.SendMessage(currentWindow.hwnd, WinAPI.WM_SYSCOMMAND, WinAPI.SC_RESTORE, 0);
 				//return false;
 			}
 			else
 			{
-				WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_MAXIMIZE, 0);
+				WinAPI.SendMessage(currentWindow.hwnd, WinAPI.WM_SYSCOMMAND, WinAPI.SC_MAXIMIZE, 0);
 				//return true;
 			}
 		}
@@ -489,7 +514,8 @@ namespace Sanebar
 
 		private void minButton_Click(object sender, RoutedEventArgs e)
 		{
-			WinAPI.SendMessage(hwndActiveWindow, WinAPI.WM_SYSCOMMAND, WinAPI.SC_MINIMIZE, 0);
+			if (currentWindow != null)
+				WinAPI.SendMessage(currentWindow.hwnd, WinAPI.WM_SYSCOMMAND, WinAPI.SC_MINIMIZE, 0);
 		}
 
 		private void maxButton_Click(object sender, RoutedEventArgs e)
@@ -522,9 +548,9 @@ namespace Sanebar
 
 		internal void ExceptionChange()
 		{
-			if (processActive != null)
+			if (activeWindow.process != null)
 			{
-				int index = exceptionList.IndexOf(processActive.ProcessName);
+				int index = exceptionList.IndexOf(activeWindow.process.ProcessName);
 
 				if (index != -1)
 				{
@@ -532,12 +558,12 @@ namespace Sanebar
 				}
 				else
 				{
-					exceptionList.Add(processActive.ProcessName);
+					exceptionList.Add(activeWindow.process.ProcessName);
 				}
 
 				foreach (SanebarWindow sanebarWindow in sanebarWindows)
 				{
-					sanebarWindow.ChangeFocus();
+					sanebarWindow.ChangeFocus(true, true);
 				}
 			}
 		}
@@ -548,6 +574,11 @@ namespace Sanebar
 			{
 				if (notifyIcon != null)
 					notifyIcon.Visible = false;
+
+				foreach(IntPtr hook in hooks)
+				{
+					WinAPI.UnhookWinEvent(hook);
+				}
 
 				Properties.Settings.Default.ExceptionList = exceptionList;
 				Properties.Settings.Default.Save();
@@ -580,6 +611,7 @@ namespace Sanebar
 					};
 
 					notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
+					//notifyIcon.MouseDown += NotifyIcon_MouseDown;
 					notifyIcon.MouseUp += NotifyIcon_MouseUp;
 				}
 
@@ -592,11 +624,26 @@ namespace Sanebar
 			}
 		}
 
+		/*private void NotifyIcon_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+		{
+			if (e.Button == System.Windows.Forms.MouseButtons.Middle)
+			{
+				QuickLaunchShowAndTrap(new Point(System.Windows.Forms.Cursor.Position.X, System.Windows.Forms.Cursor.Position.Y));
+			}
+		}*/
+
 		private void NotifyIcon_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
 		{
-			var pos = System.Windows.Forms.Cursor.Position;
+			/*if (e.Button == System.Windows.Forms.MouseButtons.Middle)
+			{
+				quickLaunch.Hide();
+			}
+			else*/
+			{
+				var pos = System.Windows.Forms.Cursor.Position;
 
-			MenuShow(new Point(pos.X, pos.Y));
+				MenuShow(new Point(pos.X, pos.Y));
+			}
 		}
 
 		private void NotifyIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -611,11 +658,11 @@ namespace Sanebar
 			if (menuWindow == null)
 				menuWindow = new MenuWindow();
 
-			if (processActive != null)
+			if (activeWindow != null && activeWindow.process != null)
 			{
 				try
 				{
-					processName = processActive.ProcessName;
+					processName = activeWindow.process.ProcessName;
 				}
 				catch
 				{
@@ -637,11 +684,11 @@ namespace Sanebar
 
 				try
 				{
-					menuWindow.appNameRun.Text = processActive.MainModule.FileVersionInfo.FileDescription;
+					menuWindow.appNameRun.Text = activeWindow.process.MainModule.FileVersionInfo.FileDescription;
 				}
 				catch
 				{
-					menuWindow.appNameRun.Text = titleActiveWindow; // @TODO titleActiveWindow might be empty?
+					menuWindow.appNameRun.Text = activeWindow.title; // @TODO titleActiveWindow might be empty?
 				}
 			}
 
