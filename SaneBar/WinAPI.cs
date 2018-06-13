@@ -314,5 +314,8 @@ namespace Sanebar
 
 		[DllImport("user32.dll")]
 		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr GetForegroundWindow();
 	}
 }

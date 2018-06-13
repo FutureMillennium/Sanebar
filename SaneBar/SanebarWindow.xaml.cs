@@ -115,8 +115,8 @@ namespace Sanebar
 
 				winEventDelegate = new WinAPI.WinEventDelegate(WinEventProc);
 
-                // EVENT_SYSTEM_FOREGROUND
-                IntPtr m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
+				// EVENT_SYSTEM_FOREGROUND
+				IntPtr m_hhook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, winEventDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT | WinAPI.WINEVENT_SKIPOWNPROCESS);
 				hooks.Add(m_hhook);
 
 				// EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_NAMECHANGE
@@ -140,8 +140,8 @@ namespace Sanebar
 
 		private void Window_MouseUp(object sender, MouseButtonEventArgs e)
 		{
-            if (e.ChangedButton == MouseButton.Right)
-            {
+			if (e.ChangedButton == MouseButton.Right)
+			{
 				var pos = e.GetPosition(this);
 				pos.X += this.Left;
 				pos.Y += this.Top;
@@ -162,41 +162,45 @@ namespace Sanebar
 		// Windows event
 		public void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
 		{
+			void ChangeForegroundWindow()
+			{
+				bool isOwn = false;
+
+				foreach (SanebarWindow sanebarWindow in sanebarWindows)
+				{
+					if (hwnd == sanebarWindow.this32.Handle)
+					{
+						isOwn = true;
+						break;
+					}
+				}
+
+				if (isOwn == false
+					&& (menuWindow == null
+						|| menuWindow.this32 == null
+						|| menuWindow.this32.Handle != hwnd)
+					&& (quickLaunch == null
+						|| quickLaunch.this32 == null
+						|| quickLaunch.this32.Handle != hwnd))
+				{
+					activeWindow = new WindowInfo();
+					activeWindow.hwnd = hwnd;
+					Update(true, true, true, true);
+				}
+			}
+
 			if (isHidden == false
 				&& hwnd != IntPtr.Zero && idObject == OBJID_WINDOW && idChild == CHILDID_SELF)
 				switch (eventType)
 			{
 				// Active window changed
 				case WinAPI.EVENT_SYSTEM_FOREGROUND:
-				case WinAPI.EVENT_SYSTEM_MINIMIZEEND:
 					{
 						if (activeWindow == null || activeWindow.hwnd != hwnd)
 						{
-							bool isOwn = false;
-
-							foreach (SanebarWindow sanebarWindow in sanebarWindows)
-							{
-								if (hwnd == sanebarWindow.this32.Handle)
-								{
-									isOwn = true;
-									break;
-								}
-							}
-
-							if (isOwn == false
-								&& (menuWindow == null
-									|| menuWindow.this32 == null
-									|| menuWindow.this32.Handle != hwnd)
-								&& (quickLaunch == null
-									|| quickLaunch.this32 == null
-									|| quickLaunch.this32.Handle != hwnd))
-							{
-								activeWindow = new WindowInfo();
-								activeWindow.hwnd = hwnd;
-								Update(true, true, true, true);
-							}
+							ChangeForegroundWindow();
 						}
-                    }
+					}
 					break;
 				// Window name change
 				case WinAPI.EVENT_OBJECT_NAMECHANGE:
@@ -208,11 +212,22 @@ namespace Sanebar
 					}
 					break;
 				// Window location/size change
-				case WinAPI.EVENT_OBJECT_LOCATIONCHANGE:
+				case WinAPI.EVENT_SYSTEM_MINIMIZEEND:
 					{
 						if (activeWindow != null && hwnd == activeWindow.hwnd)
 						{
 							Update(false, false, true, false);
+						}
+					}
+					break;
+					case WinAPI.EVENT_OBJECT_LOCATIONCHANGE:
+					{
+						if (activeWindow != null && hwnd == activeWindow.hwnd)
+						{
+							Update(false, false, true, false);
+						} else if (GetForegroundWindow() == hwnd)
+						{
+							ChangeForegroundWindow();
 						}
 					}
 					break;
@@ -224,7 +239,14 @@ namespace Sanebar
 		{
 			if (processUpdate)
 			{
-				activeWindow.process = WinAPI.GetProcessName(activeWindow.hwnd);
+				try
+				{
+					activeWindow.process = WinAPI.GetProcessName(activeWindow.hwnd);
+				}
+				catch
+				{
+
+				}
 			}
 
 			if (updateFocus)
